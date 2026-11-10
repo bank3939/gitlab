@@ -1,0 +1,253 @@
+Base: c8451de
+Head: e8aaa01995ad63b34396f6612bb7e1491f16779c
+
+## Commits
+e8aaa01 feat: add BJT CE DC bias logic and tests
+
+## Stat
+ bjt_bias.py            | 136 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_bjt_bias.py |  93 +++++++++++++++++++++++++++++++++
+ 2 files changed, 229 insertions(+)
+
+## Diff
+diff --git a/bjt_bias.py b/bjt_bias.py
+new file mode 100644
+index 0000000..f613b4e
+--- /dev/null
++++ b/bjt_bias.py
+@@ -0,0 +1,136 @@
++import math
++
++VCE_SAT = 0.2
++
++
++def analyze_bjt_ce(VCC, R1, R2, RC, RE, beta, VBE):
++    """Analyze a BJT common-emitter DC bias circuit.
++
++    Inputs: VCC, R1, R2, RC, RE, beta, VBE (numeric).
++    Returns dict with keys:
++      VTH, RTH, IB, IC, IE, VB, VE, VC, VCE, region, warnings, errors
++    Values in base SI units (V, ohm, A). On invalid input, errors are collected
++    and numeric outputs may be None.
++    """
++    errors = []
++    warnings = []
++    result = {
++        "VTH": None,
++        "RTH": None,
++        "IB": None,
++        "IC": None,
++        "IE": None,
++        "VB": None,
++        "VE": None,
++        "VC": None,
++        "VCE": None,
++        "region": "unknown",
++        "warnings": warnings,
++        "errors": errors,
++    }
++
++    params = {
++        "VCC": VCC,
++        "R1": R1,
++        "R2": R2,
++        "RC": RC,
++        "RE": RE,
++        "beta": beta,
++        "VBE": VBE,
++    }
++
++    for name, value in params.items():
++        if not isinstance(value, (int, float)) or isinstance(value, bool):
++            errors.append(f"{name} must be a finite number.")
++            continue
++        if not math.isfinite(value):
++            errors.append(f"{name} must be a finite number.")
++
++    if errors:
++        return result
++
++    # Basic physical/validity constraints
++    if VCC < 0:
++        errors.append("VCC must be non-negative.")
++    if R1 <= 0:
++        errors.append("R1 must be greater than zero.")
++    if R2 <= 0:
++        errors.append("R2 must be greater than zero.")
++    if RC < 0:
++        errors.append("RC must be non-negative.")
++    if RE < 0:
++        errors.append("RE must be non-negative.")
++    if beta <= 0:
++        errors.append("beta must be greater than zero.")
++    if VBE < 0:
++        errors.append("VBE must be non-negative.")
++    if R1 + R2 == 0:
++        errors.append("R1 + R2 must be greater than zero.")
++
++    if errors:
++        return result
++
++    vth = VCC * R2 / (R1 + R2)
++    rth = (R1 * R2) / (R1 + R2)
++
++    # Determine cutoff by base-emitter loop feasibility (Thevenin view)
++    vbe_on = VBE
++    ib = 0.0
++    ic = 0.0
++    ie = 0.0
++    cutoff = vth <= vbe_on
++
++    denom = rth + (beta + 1) * RE
++    if not cutoff and denom <= 0:
++        errors.append("Invalid bias network (non-positive Thevenin denominator).")
++        return result
++
++    if not cutoff:
++        ib_calc = (vth - vbe_on) / denom
++        if ib_calc <= 0:
++            cutoff = True
++        else:
++            ib = ib_calc
++            ic = beta * ib
++            ie = (beta + 1) * ib
++
++    vb = vth - ib * rth
++    ve = ie * RE
++    vc = VCC - ic * RC
++    vce = vc - ve
++
++    if cutoff:
++        ib = 0.0
++        ic = 0.0
++        ie = 0.0
++        vb = vth
++        ve = 0.0
++        vc = VCC
++        vce = VCC
++        region = "cutoff"
++        warnings.append("Transistor is in cutoff (insufficient base drive).")
++    else:
++        # Active/saturation determination using VCEsat
++        if vce <= VCE_SAT:
++            region = "saturation"
++            warnings.append(f"Transistor is in saturation (VCE <= {VCE_SAT} V).")
++        else:
++            region = "active"
++
++    result.update(
++        {
++            "VTH": vth,
++            "RTH": rth,
++            "IB": ib,
++            "IC": ic,
++            "IE": ie,
++            "VB": vb,
++            "VE": ve,
++            "VC": vc,
++            "VCE": vce,
++            "region": region,
++            "warnings": warnings,
++            "errors": errors,
++        }
++    )
++    return result
+diff --git a/tests/test_bjt_bias.py b/tests/test_bjt_bias.py
+new file mode 100644
+index 0000000..fdee088
+--- /dev/null
++++ b/tests/test_bjt_bias.py
+@@ -0,0 +1,93 @@
++import math
++import unittest
++
++from bjt_bias import analyze_bjt_ce
++
++
++class TestBJTBias(unittest.TestCase):
++    def test_active_reference(self):
++        # Independent hand calculation:
++        # VTH=12*10/(40+10)=2.4V, RTH=40k||10k=8000ohm
++        # IB=(2.4-0.7)/(8000+101000)=1.7/109000 A
++        # IC=100*IB, IE=101*IB
++        # VCE=12 - IC*2000 - IE*1000, region "active", no errors.
++        result = analyze_bjt_ce(
++            VCC=12,
++            R1=40000,
++            R2=10000,
++            RC=2000,
++            RE=1000,
++            beta=100,
++            VBE=0.7,
++        )
++        vth = 12 * 10 / (40 + 10)
++        rth = (40000 * 10000) / (40000 + 10000)
++        ib = (2.4 - 0.7) / (8000 + 101000)
++        ic = 100 * ib
++        ie = 101 * ib
++        vb = vth - ib * rth
++        ve = ie * 1000
++        vc = 12 - ic * 2000
++        vce = 12 - ic * 2000 - ie * 1000
++
++        self.assertEqual(result["errors"], [])
++        self.assertEqual(result["warnings"], [])
++        self.assertEqual(result["region"], "active")
++        self.assertAlmostEqual(result["VTH"], vth, places=12)
++        self.assertAlmostEqual(result["RTH"], rth, places=12)
++        self.assertAlmostEqual(result["IB"], ib, places=15)
++        self.assertAlmostEqual(result["IC"], ic, places=15)
++        self.assertAlmostEqual(result["IE"], ie, places=15)
++        self.assertAlmostEqual(result["VB"], vb, places=12)
++        self.assertAlmostEqual(result["VE"], ve, places=12)
++        self.assertAlmostEqual(result["VC"], vc, places=12)
++        self.assertAlmostEqual(result["VCE"], vce, places=12)
++
++    def test_saturation_warning(self):
++        # VCC=5,R1=10000,R2=10000,RC=10000,RE=100,beta=200,VBE=0.7 => region "saturation", warnings contain "saturation".
++        result = analyze_bjt_ce(
++            VCC=5,
++            R1=10000,
++            R2=10000,
++            RC=10000,
++            RE=100,
++            beta=200,
++            VBE=0.7,
++        )
++        self.assertEqual(result["errors"], [])
++        self.assertEqual(result["region"], "saturation")
++        self.assertTrue(
++            any("saturation" in w.lower() for w in result["warnings"]),
++            msg=f"warnings={result['warnings']}",
++        )
++
++    def test_cutoff(self):
++        # VCC=12,R1=100000,R2=1000,RC=2000,RE=1000,beta=100,VBE=0.7 => region "cutoff", warnings present.
++        result = analyze_bjt_ce(
++            VCC=12,
++            R1=100000,
++            R2=1000,
++            RC=2000,
++            RE=1000,
++            beta=100,
++            VBE=0.7,
++        )
++        self.assertEqual(result["errors"], [])
++        self.assertEqual(result["region"], "cutoff")
++        self.assertTrue(result["warnings"], msg="expected warnings present")
++
++    def test_invalid_r1_zero(self):
++        result = analyze_bjt_ce(
++            VCC=12,
++            R1=0,
++            R2=10000,
++            RC=2000,
++            RE=1000,
++            beta=100,
++            VBE=0.7,
++        )
++        self.assertTrue(result["errors"], msg="expected errors present")
++
++
++if __name__ == "__main__":
++    unittest.main()

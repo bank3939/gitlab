@@ -1,0 +1,239 @@
+Base: e8aaa01995ad63b34396f6612bb7e1491f16779c
+Head: f5dcb701597f4c5afc533ad9989c8b1984e989b2
+
+## Commits
+f5dcb70 feat: add Flask UI for BJT CE DC bias calculator
+
+## Stat
+ app.py               | 67 +++++++++++++++++++++++++++++++++++++++++++
+ static/style.css     | 21 ++++++++++++++
+ templates/index.html | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/test_app.py    | 32 +++++++++++++++++++++
+ 4 files changed, 201 insertions(+)
+
+## Diff
+diff --git a/app.py b/app.py
+new file mode 100644
+index 0000000..ade9e03
+--- /dev/null
++++ b/app.py
+@@ -0,0 +1,67 @@
++import math
++from flask import Flask, render_template, request
++
++from bjt_bias import analyze_bjt_ce
++
++app = Flask(__name__)
++
++FIELDS = ["VCC", "R1", "R2", "RC", "RE", "beta", "VBE"]
++DEFAULTS = {
++    "VCC": "12",
++    "R1": "40000",
++    "R2": "10000",
++    "RC": "2000",
++    "RE": "1000",
++    "beta": "100",
++    "VBE": "0.7",
++}
++
++
++def _parse_inputs(form):
++    values = {}
++    errors = []
++    for field in FIELDS:
++        raw = (form.get(field) or "").strip()
++        values[field] = raw
++        if raw == "":
++            errors.append(f"{field} is required.")
++            continue
++        try:
++            num = float(raw)
++        except (TypeError, ValueError):
++            errors.append(f"{field} must be a number.")
++            continue
++        if not math.isfinite(num):
++            errors.append(f"{field} must be a finite number.")
++            continue
++        values[field] = num
++    return values, errors
++
++
++@app.route("/", methods=["GET", "POST"])
++def index():
++    inputs = DEFAULTS.copy()
++    result = None
++    parse_errors = []
++    if request.method == "POST":
++        parsed, parse_errors = _parse_inputs(request.form)
++        # keep raw strings for form re-fill when parsing fails
++        inputs = {k: (str(v) if not isinstance(v, str) else v) for k, v in parsed.items()}
++        if not parse_errors:
++            numeric = {k: float(parsed[k]) for k in FIELDS}
++            result = analyze_bjt_ce(**numeric)
++        else:
++            # still show form values entered
++            for field in FIELDS:
++                inputs[field] = request.form.get(field, "")
++    return render_template(
++        "index.html",
++        inputs=inputs,
++        result=result,
++        parse_errors=parse_errors,
++        fields=FIELDS,
++    )
++
++
++if __name__ == "__main__":
++    app.run(debug=True)
+diff --git a/static/style.css b/static/style.css
+new file mode 100644
+index 0000000..8441107
+--- /dev/null
++++ b/static/style.css
+@@ -0,0 +1,21 @@
++:root { --bg:#f6f8fb; --card:#fff; --text:#1d2433; --muted:#5b6475; --border:#d7dde8; --accent:#1f6feb; --error:#b42318; --error-bg:#fef3f2; --warn:#b54708; --warn-bg:#fffaeb; }
++* { box-sizing: border-box; }
++body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); line-height:1.4; }
++.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
++h1 { margin: 0 0 4px; font-size: 1.8rem; }
++.subtitle { margin: 0 0 20px; color: var(--muted); }
++.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: var(--card); border:1px solid var(--border); border-radius: 10px; padding: 16px; }
++label { display:flex; flex-direction:column; font-size: 0.95rem; font-weight:600; gap:4px; }
++input { padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:1rem; }
++.actions { display:flex; align-items:flex-end; }
++button { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:10px 16px; font-size:1rem; cursor:pointer; }
++button:hover { filter: brightness(0.95); }
++.panel { margin-top:16px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
++.panel h2 { margin:0 0 8px; font-size:1.1rem; }
++.panel.error { border-color:#fecdca; background:var(--error-bg); color:var(--error); }
++.panel.warning { border-color:#fedf89; background:var(--warn-bg); color:var(--warn); }
++.panel.error ul, .panel.warning ul { margin:0; padding-left:20px; color:inherit; }
++table { width:100%; border-collapse: collapse; font-size:0.95rem; }
++th, td { border:1px solid var(--border); padding:8px; text-align:left; word-break: break-word; }
++th { background:#f0f4fa; }
++p { margin: 4px 0 10px; }
+diff --git a/templates/index.html b/templates/index.html
+new file mode 100644
+index 0000000..b18a13a
+--- /dev/null
++++ b/templates/index.html
+@@ -0,0 +1,81 @@
++<!doctype html>
++<html lang="en">
++<head>
++  <meta charset="utf-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1">
++  <title>BJT CE DC Bias Calculator</title>
++  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
++</head>
++<body>
++  <main class="container">
++    <h1>BJT Common-Emitter DC Bias Calculator</h1>
++    <p class="subtitle">Enter circuit parameters to compute the DC operating point.</p>
++
++    <form method="post" class="form-grid">
++      <label>VCC (V)<input type="text" name="VCC" value="{{ inputs['VCC'] }}" required></label>
++      <label>R1 (Ω)<input type="text" name="R1" value="{{ inputs['R1'] }}" required></label>
++      <label>R2 (Ω)<input type="text" name="R2" value="{{ inputs['R2'] }}" required></label>
++      <label>RC (Ω)<input type="text" name="RC" value="{{ inputs['RC'] }}" required></label>
++      <label>RE (Ω)<input type="text" name="RE" value="{{ inputs['RE'] }}" required></label>
++      <label>beta<input type="text" name="beta" value="{{ inputs['beta'] }}" required></label>
++      <label>VBE (V)<input type="text" name="VBE" value="{{ inputs['VBE'] }}" required></label>
++      <div class="actions"><button type="submit">Compute</button></div>
++    </form>
++
++    {% if parse_errors %}
++    <section class="panel error">
++      <h2>Input Errors</h2>
++      <ul>
++        {% for e in parse_errors %}<li>{{ e }}</li>{% endfor %}
++      </ul>
++    </section>
++    {% endif %}
++
++    {% if result %}
++      {% if result.errors %}
++      <section class="panel error">
++        <h2>Validation Errors</h2>
++        <ul>
++          {% for e in result.errors %}<li>{{ e }}</li>{% endfor %}
++        </ul>
++      </section>
++      {% endif %}
++
++      {% if result.warnings %}
++      <section class="panel warning">
++        <h2>Warnings</h2>
++        <ul>
++          {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
++        </ul>
++      </section>
++      {% endif %}
++
++      <section class="panel">
++        <h2>DC Operating Point</h2>
++        <p><strong>Region:</strong> {{ result.region }}</p>
++        <table>
++          <thead>
++            <tr>
++              <th>VTH (V)</th><th>RTH (Ω)</th><th>IB (A)</th><th>IC (A)</th><th>IE (A)</th>
++              <th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th>
++            </tr>
++          </thead>
++          <tbody>
++            <tr>
++              <td>{{ result.VTH if result.VTH is not none else '—' }}</td>
++              <td>{{ result.RTH if result.RTH is not none else '—' }}</td>
++              <td>{{ result.IB if result.IB is not none else '—' }}</td>
++              <td>{{ result.IC if result.IC is not none else '—' }}</td>
++              <td>{{ result.IE if result.IE is not none else '—' }}</td>
++              <td>{{ result.VB if result.VB is not none else '—' }}</td>
++              <td>{{ result.VE if result.VE is not none else '—' }}</td>
++              <td>{{ result.VC if result.VC is not none else '—' }}</td>
++              <td>{{ result.VCE if result.VCE is not none else '—' }}</td>
++            </tr>
++          </tbody>
++        </table>
++      </section>
++    {% endif %}
++  </main>
++</body>
++</html>
+diff --git a/tests/test_app.py b/tests/test_app.py
+new file mode 100644
+index 0000000..e569495
+--- /dev/null
++++ b/tests/test_app.py
+@@ -0,0 +1,32 @@
++import unittest
++
++
++class TestApp(unittest.TestCase):
++    def setUp(self):
++        import app
++
++        self.client = app.app.test_client()
++        self.client.testing = True
++
++    def test_get_index_contains_vcc(self):
++        resp = self.client.get("/")
++        self.assertEqual(resp.status_code, 200)
++        self.assertIn(b"VCC", resp.data)
++
++    def test_post_computes_and_contains_vce(self):
++        payload = {
++            "VCC": "12",
++            "R1": "40000",
++            "R2": "10000",
++            "RC": "2000",
++            "RE": "1000",
++            "beta": "100",
++            "VBE": "0.7",
++        }
++        resp = self.client.post("/", data=payload)
++        self.assertEqual(resp.status_code, 200)
++        self.assertIn(b"VCE", resp.data)
++
++
++if __name__ == "__main__":
++    unittest.main()
