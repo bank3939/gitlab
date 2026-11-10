@@ -41,15 +41,15 @@
   <circle cx="120" cy="350" r="4" fill="#102a43"/>
   <text class="label" x="55" y="345">ฐาน B</text>
 
-  <!-- R2 down to ground (separate) -->
+  <!-- R2 down to ground (separate, bottom leg) -->
   <line class="wire" x1="120" y1="350" x2="120" y2="390"/>
   <rect class="res" x="105" y="390" width="30" height="80" rx="4"/>
   <text class="label" x="145" y="435">R2</text>
-  <line class="wire" x1="120" y1="470" x2="120" y2="560"/>
-  <line class="wire" x1="95" y1="560" x2="145" y2="560"/>
-  <line class="wire" x1="105" y1="570" x2="135" y2="570"/>
-  <line class="wire" x1="115" y1="580" x2="125" y2="580"/>
-  <text class="label" x="150" y="575">GND</text>
+  <line class="wire" x1="120" y1="470" x2="120" y2="600"/>
+  <line class="wire" x1="95" y1="600" x2="145" y2="600"/>
+  <line class="wire" x1="105" y1="610" x2="135" y2="610"/>
+  <line class="wire" x1="115" y1="620" x2="125" y2="620"/>
+  <text class="label" x="150" y="615">GND</text>
 
   <!-- Base to transistor -->
   <line class="wire" x1="120" y1="350" x2="240" y2="350"/>

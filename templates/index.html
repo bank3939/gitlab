@@ -61,14 +61,14 @@
         <text class="l" x="45" y="225">โหนดฐาน B</text>
         <text class="sm" x="45" y="242">VB = {{ fmt(result.VB,'V') if has else '—' }}</text>
 
-        <!-- R2 and separate ground -->
+        <!-- R2 and separate ground (bottom leg) -->
         <line class="wire" x1="100" y1="230" x2="100" y2="270"/>
         <rect class="res" x="85" y="270" width="30" height="60" rx="3"/><text class="l" x="122" y="305">R2 = {{ inputs['R2'] }} Ω</text>
-        <line class="wire" x1="100" y1="330" x2="100" y2="385"/>
-        <line class="wire" x1="78" y1="385" x2="122" y2="385"/>
-        <line class="wire" x1="86" y1="393" x2="114" y2="393"/>
-        <line class="wire" x1="94" y1="401" x2="106" y2="401"/>
-        <text class="sm" x="125" y="398">GND (0 V)</text>
+        <line class="wire" x1="100" y1="330" x2="100" y2="440"/>
+        <line class="wire" x1="78" y1="440" x2="122" y2="440"/>
+        <line class="wire" x1="86" y1="448" x2="114" y2="448"/>
+        <line class="wire" x1="94" y1="456" x2="106" y2="456"/>
+        <text class="sm" x="125" y="453">GND (0 V)</text>
 
         <!-- Base to transistor -->
         <line class="wire" x1="100" y1="230" x2="200" y2="230"/>
