@@ -9,4 +9,4 @@
 ## Progress
 - [x] Task 1: complete (commits c8451de..e8aaa01, review clean/spec+quality approved). Tests: `python -m unittest tests.test_bjt_bias -v` 4/4 OK. Minor notes parked: invalid-state region contract (`unknown`) and tighter invalid-input assertions.
 - [x] Task 2: complete (commits e8aaa01..f5dcb70, review clean/spec+quality approved). Tests: `python -m unittest tests.test_app` 2/2 OK, `python -m unittest tests.test_bjt_bias` 4/4 OK, test_client smoke GET/POST OK. Minor notes parked: limited UI/error-path test coverage, debug=True in __main__.
-- [ ] Task 3
+- [x] Task 3: complete (commits f5dcb70..36f9079 + follow-up fix, review addressed). Verification: pytest unavailable, `unittest` 8/8 OK (`test_electrical` 2, `tests/test_bjt_bias` 4, `tests/test_app` 2). Localhost smoke: `python app.py` on 127.0.0.1:5000 returned HTTP 200 with VCC and form. Remote `origin` configured, no push. Minor notes parked: pytest not installed, dev server debug=True.

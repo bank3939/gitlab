@@ -100,12 +100,12 @@ dd1a893 test: verify DC circuit results
 
 ### Final commit
 Staged docs/specs/plans and SDD ledger (including this report) as remaining necessary project artifacts for the lab; avoided junk/`__pycache__` (not tracked/untracked in status).
-- **Commit:** `36ccee8` — `docs: add BJT CE DC bias specs, plans, and SDD records` (11 files, amended to include finalized report).
+- **Commit:** `36f9079` — `docs: add BJT CE DC bias specs, plans, and SDD records` (11 files; note: report text amended in follow-up commit to correct hash/ledger status).
 
-**Post-commit log:**
+**Post-commit log (at time of that commit):**
 ```text
 $ git log --oneline -3
-36ccee8 docs: add BJT CE DC bias specs, plans, and SDD records
+36f9079 docs: add BJT CE DC bias specs, plans, and SDD records
 f5dcb70 feat: add Flask UI for BJT CE DC bias calculator
 e8aaa01 feat: add BJT CE DC bias logic and tests
 ```
