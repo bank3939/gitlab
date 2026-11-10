@@ -24,96 +24,134 @@
 
     <section class="panel illustration">
       <h2>ภาพประกอบการคำนวณ (DC Operating Point)</h2>
-      <p class="muted">แสดงค่าตามจำนวนที่ใส่และผลคำนวณ (Active / Cutoff / Saturation, VCEsat = 0.2 V)</p>
+      <p class="muted">วงจร CE แบบแบ่งแรงดัน (DC Bias) — แสดงค่าตามจำนวนที่ใส่ พร้อมหน่วยและสมมติฐาน</p>
       {% set has = result is not none and (result.errors|length == 0) %}
       {% macro fmt(v, unit='') -%}
         {%- if v is none -%}—{%- else -%}{{ "%.6g"|format(v) }}{% if unit %} {{ unit }}{% endif %}{%- endif -%}
       {%- endmacro %}
-      <svg class="calc-illustration" viewBox="0 0 1100 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบการคำนวณ BJT CE DC Bias พร้อมค่าที่ใส่">
-        <style>
-          .t{font:700 20px Arial,sans-serif;fill:#102a43}.s{font:600 16px Arial,sans-serif;fill:#243b53}
-          .l{font:14px Arial,sans-serif;fill:#102a43}.m{font:13px Consolas,monospace;fill:#102a43}
-          .box{fill:#fff;stroke:#bcccdc;stroke-width:1.2}.in{fill:#e6f6ff;stroke:#7cc4fa}
-          .out{fill:#f0fff4;stroke:#57ae5b}.warnb{fill:#fff7e6;stroke:#f0b429}
-          .wire{stroke:#102a43;stroke-width:2;fill:none}.res{stroke:#102a43;stroke-width:2;fill:#fff}
-        </style>
-        <rect x="0" y="0" width="1100" height="520" fill="#fbfcfe"/>
-        <text class="t" x="20" y="30">BJT CE Voltage-Divider Bias — ค่าที่ใช้คำนวณ</text>
+      <svg class="calc-illustration" viewBox="0 0 1120 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ภาพประกอบการคำนวณ BJT CE DC Bias พร้อมค่าที่ใส่ หน่วย และสมมติฐาน">
+        <defs>
+          <style>
+            .t{font:700 20px Arial,sans-serif;fill:#102a43}.s{font:600 16px Arial,sans-serif;fill:#243b53}
+            .l{font:14px Arial,sans-serif;fill:#102a43}.m{font:13px Consolas,monospace;fill:#102a43}
+            .sm{font:12px Arial,sans-serif;fill:#334e68}
+            .box{fill:#fff;stroke:#bcccdc;stroke-width:1.2}.in{fill:#e6f6ff;stroke:#7cc4fa}
+            .out{fill:#f0fff4;stroke:#57ae5b}.warnb{fill:#fff7e6;stroke:#f0b429}.note{fill:#f8fafc;stroke:#cbd2d9}
+            .wire{stroke:#102a43;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+            .res{stroke:#102a43;stroke-width:2;fill:#fff}
+          </style>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L8,3 z" fill="#102a43"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="1120" height="560" fill="#fbfcfe"/>
+        <text class="t" x="20" y="30">BJT CE Voltage-Divider DC Bias — ค่าตามที่ใส่ (พร้อมหน่วยและสมมติฐาน)</text>
 
-        <!-- Circuit simplified with input values -->
-        <rect class="box" x="20" y="45" width="430" height="455" rx="8"/>
-        <text class="s" x="35" y="72">วงจรและอินพุต</text>
-        <line class="wire" x1="90" y1="95" x2="360" y2="95"/>
-        <text class="l" x="190" y="88">VCC = {{ inputs['VCC'] }} V</text>
-        <line class="wire" x1="90" y1="95" x2="90" y2="125"/>
-        <rect class="res" x="75" y="125" width="30" height="55" rx="3"/><text class="l" x="112" y="157">R1={{ inputs['R1'] }} Ω</text>
-        <line class="wire" x1="90" y1="180" x2="90" y2="230"/>
-        <circle cx="90" cy="230" r="3" fill="#102a43"/><text class="l" x="35" y="225">B</text>
-        <line class="wire" x1="90" y1="230" x2="185" y2="230"/>
-        <line class="wire" x1="90" y1="230" x2="90" y2="260"/>
-        <rect class="res" x="75" y="260" width="30" height="55" rx="3"/><text class="l" x="112" y="292">R2={{ inputs['R2'] }} Ω</text>
-        <line class="wire" x1="90" y1="315" x2="90" y2="390"/>
-        <!-- ground for R2 -->
-        <line class="wire" x1="70" y1="390" x2="110" y2="390"/>
-        <line class="wire" x1="78" y1="398" x2="102" y2="398"/>
-        <line class="wire" x1="86" y1="406" x2="94" y2="406"/>
-        <text class="l" x="112" y="402">GND</text>
-        <!-- transistor -->
-        <line class="wire" x1="195" y1="205" x2="195" y2="255"/>
-        <line class="wire" x1="195" y1="230" x2="185" y2="230"/>
-        <line class="wire" x1="195" y1="215" x2="240" y2="185"/>
-        <line class="wire" x1="195" y1="245" x2="240" y2="275"/>
-        <polygon points="232,266 240,275 227,276" fill="#102a43"/>
-        <circle cx="215" cy="230" r="28" class="wire"/>
-        <text class="l" x="250" y="225">β={{ inputs['beta'] }}</text>
-        <text class="l" x="250" y="245">VBE={{ inputs['VBE'] }} V</text>
-        <text class="l" x="250" y="185">C (VC)</text><text class="l" x="250" y="292">E (VE)</text>
-        <line class="wire" x1="240" y1="185" x2="240" y2="145"/>
-        <rect class="res" x="225" y="115" width="30" height="30" rx="3"/><text class="l" x="262" y="135">RC={{ inputs['RC'] }} Ω</text>
-        <line class="wire" x1="240" y1="115" x2="240" y2="95"/>
-        <line class="wire" x1="240" y1="275" x2="240" y2="330"/>
-        <rect class="res" x="225" y="330" width="30" height="45" rx="3"/><text class="l" x="262" y="357">RE={{ inputs['RE'] }} Ω</text>
-        <line class="wire" x1="240" y1="375" x2="240" y2="430"/>
-        <!-- ground for RE -->
-        <line class="wire" x1="220" y1="430" x2="260" y2="430"/>
-        <line class="wire" x1="228" y1="438" x2="252" y2="438"/>
-        <line class="wire" x1="236" y1="446" x2="244" y2="446"/>
-        <text class="l" x="262" y="442">GND</text>
+        <!-- Circuit -->
+        <rect class="box" x="20" y="45" width="450" height="495" rx="8"/>
+        <text class="s" x="35" y="72">วงจร (NPN, Common-Emitter, DC)</text>
 
-        <rect class="in" x="35" y="360" width="170" height="55" rx="6"/>
-        <text class="m" x="45" y="382">สรุปอินพุตที่ใส่</text>
-        <text class="m" x="45" y="402">VCC={{ inputs['VCC'] }}, β={{ inputs['beta'] }}, VBE={{ inputs['VBE'] }}</text>
+        <!-- VCC rail -->
+        <line class="wire" x1="100" y1="95" x2="380" y2="95"/>
+        <text class="l" x="200" y="88">VCC = {{ inputs['VCC'] }} V</text>
+        <line class="wire" x1="100" y1="95" x2="100" y2="120"/>
+        <rect class="res" x="85" y="120" width="30" height="60" rx="3"/><text class="l" x="122" y="155">R1 = {{ inputs['R1'] }} Ω</text>
+        <line class="wire" x1="100" y1="180" x2="100" y2="230"/>
+        <circle cx="100" cy="230" r="3.5" fill="#102a43"/>
+        <text class="l" x="45" y="225">โหนดฐาน B</text>
+        <text class="sm" x="45" y="242">VB = {{ fmt(result.VB,'V') if has else '—' }}</text>
+
+        <!-- R2 and separate ground -->
+        <line class="wire" x1="100" y1="230" x2="100" y2="270"/>
+        <rect class="res" x="85" y="270" width="30" height="60" rx="3"/><text class="l" x="122" y="305">R2 = {{ inputs['R2'] }} Ω</text>
+        <line class="wire" x1="100" y1="330" x2="100" y2="385"/>
+        <line class="wire" x1="78" y1="385" x2="122" y2="385"/>
+        <line class="wire" x1="86" y1="393" x2="114" y2="393"/>
+        <line class="wire" x1="94" y1="401" x2="106" y2="401"/>
+        <text class="sm" x="125" y="398">GND (0 V)</text>
+
+        <!-- Base to transistor -->
+        <line class="wire" x1="100" y1="230" x2="200" y2="230"/>
+        <line class="wire" x1="150" y1="230" x2="175" y2="230" marker-end="url(#arr)"/>
+        <text class="sm" x="135" y="220">IB {{ fmt(result.IB,'A') if has else '' }}</text>
+
+        <!-- NPN transistor -->
+        <line class="wire" x1="210" y1="200" x2="210" y2="260"/> <!-- base bar -->
+        <line class="wire" x1="210" y1="230" x2="200" y2="230"/>
+        <line class="wire" x1="210" y1="212" x2="260" y2="175"/> <!-- collector -->
+        <line class="wire" x1="210" y1="248" x2="260" y2="285"/> <!-- emitter -->
+        <polygon points="250,273 260,285 246,283" fill="#102a43"/> <!-- NPN emitter arrow outward -->
+        <circle cx="232" cy="230" r="34" class="wire"/>
+        <text class="l" x="275" y="220">NPN</text>
+        <text class="l" x="275" y="238">β = {{ inputs['beta'] }}</text>
+        <text class="sm" x="268" y="170">C, VC={{ fmt(result.VC,'V') if has else '—' }}</text>
+        <text class="sm" x="268" y="302">E, VE={{ fmt(result.VE,'V') if has else '—' }}</text>
+
+        <!-- RC to VCC -->
+        <line class="wire" x1="260" y1="175" x2="260" y2="140"/>
+        <line class="wire" x1="260" y1="165" x2="260" y2="150" marker-end="url(#arr)"/>
+        <text class="sm" x="268" y="160">IC {{ fmt(result.IC,'A') if has else '' }}</text>
+        <rect class="res" x="245" y="110" width="30" height="30" rx="3"/><text class="l" x="282" y="130">RC = {{ inputs['RC'] }} Ω</text>
+        <line class="wire" x1="260" y1="110" x2="260" y2="95"/>
+
+        <!-- RE and separate ground -->
+        <line class="wire" x1="260" y1="285" x2="260" y2="340"/>
+        <line class="wire" x1="260" y1="300" x2="260" y2="315" marker-end="url(#arr)"/>
+        <text class="sm" x="268" y="322">IE {{ fmt(result.IE,'A') if has else '' }}</text>
+        <rect class="res" x="245" y="340" width="30" height="45" rx="3"/><text class="l" x="282" y="367">RE = {{ inputs['RE'] }} Ω</text>
+        <line class="wire" x1="260" y1="385" x2="260" y2="440"/>
+        <line class="wire" x1="238" y1="440" x2="282" y2="440"/>
+        <line class="wire" x1="246" y1="448" x2="274" y2="448"/>
+        <line class="wire" x1="254" y1="456" x2="266" y2="456"/>
+        <text class="sm" x="285" y="453">GND (0 V)</text>
+
+        <!-- VBE, VCE polarity marks -->
+        <text class="sm" x="170" y="255">+</text><text class="sm" x="170" y="275">VBE={{ inputs['VBE'] }} V</text><text class="sm" x="235" y="275">−</text>
+        <text class="sm" x="305" y="210">VCE={{ fmt(result.VCE,'V') if has else '—' }}</text>
+        <text class="sm" x="305" y="225">( + ที่ C, − ที่ E )</text>
+
+        <!-- Assumptions -->
+        <rect class="note" x="35" y="410" width="420" height="120" rx="6"/>
+        <text class="s" x="48" y="432">สมมติฐาน / เงื่อนไข (DC)</text>
+        <text class="sm" x="48" y="452">• NPN, วิเคราะห์ DC เท่านั้น (ไม่มีสัญญาณ AC)</text>
+        <text class="sm" x="48" y="470">• ใช้ VBE(on) = {{ inputs['VBE'] }} V (ตามอินพุต), β คงที่ = {{ inputs['beta'] }}</text>
+        <text class="sm" x="48" y="488">• VCE(sat) = 0.2 V, IE = (β+1)IB, IC = βIB</text>
+        <text class="sm" x="48" y="506">• กราวด์แยกกันเป็นจุดอ้างอิงเดียวกัน (0 V), ไม่คิด Early effect</text>
+        <text class="sm" x="48" y="524">• ภาวะตัดสินจาก VTH≤VBE (cutoff) หรือ VCE≤0.2 V (saturation)</text>
 
         <!-- Calculations -->
-        <rect class="box" x="465" y="45" width="615" height="455" rx="8"/>
-        <text class="s" x="480" y="72">ขั้นตอนและผลลัพธ์</text>
+        <rect class="box" x="485" y="45" width="615" height="495" rx="8"/>
+        <text class="s" x="500" y="72">ขั้นตอนการคำนวณและผลลัพธ์ (มีหน่วย)</text>
 
-        <rect class="in" x="480" y="90" width="585" height="86" rx="6"/>
-        <text class="s" x="495" y="114">A) Thevenin ที่ฐาน</text>
-        <text class="m" x="495" y="138">VTH = VCC·R2/(R1+R2) = {{ inputs['VCC'] }}·{{ inputs['R2'] }}/({{ inputs['R1'] }}+{{ inputs['R2'] }}) = {{ fmt(result.VTH,'V') if has else '—' }}</text>
-        <text class="m" x="495" y="160">RTH = R1·R2/(R1+R2) = ({{ inputs['R1'] }}·{{ inputs['R2'] }})/({{ inputs['R1'] }}+{{ inputs['R2'] }}) = {{ fmt(result.RTH,'Ω') if has else '—' }}</text>
+        <rect class="in" x="500" y="90" width="585" height="92" rx="6"/>
+        <text class="s" x="515" y="114">A) เทียบเท่า Thevenin ที่ฐาน</text>
+        <text class="m" x="515" y="138">VTH = VCC·R2/(R1+R2) = ({{ inputs['VCC'] }} V·{{ inputs['R2'] }} Ω)/({{ inputs['R1'] }}+{{ inputs['R2'] }}) Ω = {{ fmt(result.VTH,'V') if has else '—' }}</text>
+        <text class="m" x="515" y="162">RTH = R1·R2/(R1+R2) = ({{ inputs['R1'] }}·{{ inputs['R2'] }})/({{ inputs['R1'] }}+{{ inputs['R2'] }}) Ω = {{ fmt(result.RTH,'Ω') if has else '—' }}</text>
 
-        <rect class="in" x="480" y="186" width="585" height="128" rx="6"/>
-        <text class="s" x="495" y="210">B) กระแสและแรงดัน</text>
-        <text class="m" x="495" y="234">IB = (VTH−VBE)/(RTH+(β+1)·RE) = {{ fmt(result.IB,'A') if has else '—' }}</text>
-        <text class="m" x="495" y="256">IC = β·IB = {{ fmt(result.IC,'A') if has else '—' }}   ,   IE = (β+1)·IB = {{ fmt(result.IE,'A') if has else '—' }}</text>
-        <text class="m" x="495" y="278">VB = VTH−IB·RTH = {{ fmt(result.VB,'V') if has else '—' }}   ,   VE = IE·RE = {{ fmt(result.VE,'V') if has else '—' }}</text>
-        <text class="m" x="495" y="300">VC = VCC−IC·RC = {{ fmt(result.VC,'V') if has else '—' }}</text>
+        <rect class="in" x="500" y="192" width="585" height="132" rx="6"/>
+        <text class="s" x="515" y="216">B) กระแสและแรงดันโหนด (KVL/KCL)</text>
+        <text class="m" x="515" y="240">IB = (VTH−VBE)/(RTH+(β+1)·RE) = {{ fmt(result.IB,'A') if has else '—' }}</text>
+        <text class="m" x="515" y="262">IC = β·IB = {{ fmt(result.IC,'A') if has else '—' }} ,  IE = (β+1)·IB = {{ fmt(result.IE,'A') if has else '—' }}</text>
+        <text class="m" x="515" y="284">VB = VTH−IB·RTH = {{ fmt(result.VB,'V') if has else '—' }} ,  VE = IE·RE = {{ fmt(result.VE,'V') if has else '—' }}</text>
+        <text class="m" x="515" y="306">VC = VCC−IC·RC = {{ fmt(result.VC,'V') if has else '—' }}</text>
 
-        <rect class="out" x="480" y="324" width="585" height="56" rx="6"/>
-        <text class="s" x="495" y="348">C) แรงดัน C-E</text>
-        <text class="m" x="495" y="370">VCE = VC−VE = {{ fmt(result.VCE,'V') if has else '—' }}</text>
+        <rect class="out" x="500" y="334" width="585" height="56" rx="6"/>
+        <text class="s" x="515" y="358">C) แรงดันคอลเลกเตอร์-อิมิตเตอร์</text>
+        <text class="m" x="515" y="380">VCE = VC−VE = {{ fmt(result.VCE,'V') if has else '—' }}</text>
 
         {% if has %}
-        <rect class="{{ 'warnb' if result.region != 'active' else 'out' }}" x="480" y="392" width="585" height="90" rx="6"/>
-        <text class="s" x="495" y="418">D) ภาวะการทำงาน: {{ result.region }}</text>
-        <text class="m" x="495" y="442">เงื่อนไข: cutoff เมื่อ VTH ≤ VBE หรือ IB ≤ 0, saturation เมื่อ VCE ≤ 0.2 V, มิฉะนั้น active</text>
-        <text class="m" x="495" y="464">{% if result.warnings %}คำเตือน: {{ result.warnings|join('; ') }}{% elif result.errors %}ข้อผิดพลาด: {{ result.errors|join('; ') }}{% else %}ไม่มีคำเตือน{% endif %}</text>
+        <rect class="{{ 'warnb' if result.region != 'active' else 'out' }}" x="500" y="400" width="585" height="130" rx="6"/>
+        <text class="s" x="515" y="424">D) สรุปจุดทำงาน DC: {{ result.region }}</text>
+        <text class="m" x="515" y="448">VTH={{ fmt(result.VTH,'V') }}, RTH={{ fmt(result.RTH,'Ω') }}, IB={{ fmt(result.IB,'A') }}, IC={{ fmt(result.IC,'A') }}, IE={{ fmt(result.IE,'A') }}</text>
+        <text class="m" x="515" y="470">VB={{ fmt(result.VB,'V') }}, VE={{ fmt(result.VE,'V') }}, VC={{ fmt(result.VC,'V') }}, VCE={{ fmt(result.VCE,'V') }}</text>
+        <text class="m" x="515" y="492">เกณฑ์: VTH ≤ VBE หรือ IB ≤ 0 → cutoff, VCE ≤ 0.2 V → saturation, อื่น ๆ → active</text>
+        <text class="m" x="515" y="514">{% if result.warnings %}คำเตือน: {{ result.warnings|join('; ') }}{% elif result.errors %}ข้อผิดพลาด: {{ result.errors|join('; ') }}{% else %}ไม่มีคำเตือน{% endif %}</text>
         {% else %}
-        <rect class="warnb" x="480" y="392" width="585" height="90" rx="6"/>
-        <text class="s" x="495" y="418">D) ภาวะการทำงาน: —</text>
-        <text class="m" x="495" y="442">{% if result and result.errors %}มีข้อผิดพลาดในการตรวจสอบอินพุต — แก้ไขแล้วกด Compute{% elif parse_errors %}มีข้อผิดพลาดรูปแบบอินพุต — แก้ไขแล้วกด Compute{% else %}กด Compute เพื่อคำนวณและแสดงค่าบนภาพประกอบ{% endif %}</text>
-        <text class="m" x="495" y="464">ค่าผลลัพธ์จะแสดงตามจำนวนที่ใส่เมื่อคำนวณสำเร็จ</text>
+        <rect class="warnb" x="500" y="400" width="585" height="130" rx="6"/>
+        <text class="s" x="515" y="424">D) สรุปจุดทำงาน DC: —</text>
+        <text class="m" x="515" y="448">{% if result and result.errors %}มีข้อผิดพลาดในการตรวจสอบอินพุต — แก้ไขแล้วกด Compute{% elif parse_errors %}มีข้อผิดพลาดรูปแบบอินพุต — แก้ไขแล้วกด Compute{% else %}กด Compute เพื่อคำนวณและแสดงค่าพร้อมหน่วยบนภาพประกอบ{% endif %}</text>
+        <text class="m" x="515" y="472">หน่วยผลลัพธ์: VTH,VB,VE,VC,VCE (V), RTH (Ω), IB,IC,IE (A)</text>
+        <text class="m" x="515" y="496">สมมติฐานหลัก: VBE(on)={{ inputs['VBE'] }} V, β={{ inputs['beta'] }}, VCE(sat)=0.2 V, DC</text>
         {% endif %}
       </svg>
     </section>
