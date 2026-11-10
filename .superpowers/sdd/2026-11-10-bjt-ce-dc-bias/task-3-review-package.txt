@@ -1,0 +1,1136 @@
+Base: f5dcb701597f4c5afc533ad9989c8b1984e989b2
+Head: 36f9079ea9803c457bb7abf7540b28528c08018d
+
+## Commits
+36f9079 docs: add BJT CE DC bias specs, plans, and SDD records
+
+## Stat
+ .../sdd/2026-11-10-bjt-ce-dc-bias/progress.md      |  12 +
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-1-brief.md  |  26 +++
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-1-report.md |  76 +++++++
+ .../task-1-review-package.txt                      | 253 +++++++++++++++++++++
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-2-brief.md  |  20 ++
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-2-report.md |  68 ++++++
+ .../task-2-review-package.txt                      | 239 +++++++++++++++++++
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-3-brief.md  |  11 +
+ .../sdd/2026-11-10-bjt-ce-dc-bias/task-3-report.md | 123 ++++++++++
+ .../superpowers/plans/2026-11-10-bjt-ce-dc-bias.md | 183 +++++++++++++++
+ .../specs/2026-11-10-bjt-ce-dc-bias-design.md      |  38 ++++
+ 11 files changed, 1049 insertions(+)
+
+## Diff
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/progress.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/progress.md
+new file mode 100644
+index 0000000..0b118f5
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/progress.md
+@@ -0,0 +1,12 @@
++# SDD ledger — plan: docs/superpowers/plans/2026-11-10-bjt-ce-dc-bias.md
++
++## Setup
++- Spec: docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md (read)
++- Base HEAD: c8451de
++- Ruling: git CLI at C:\Users\B6821241\AppData\Local\Programs\Git\cmd\git.exe (not in PATH); SDD bash scripts unavailable on Windows so workspace/briefs/review packages handled manually. No isolated worktree created (ruling: existing lab repo, user wants demo+commit today in this workspace; keep existing files intact).
++- Tasks: 1) engineering logic+tests 2) Flask UI 3) final verification/demo/commit
++
++## Progress
++- [x] Task 1: complete (commits c8451de..e8aaa01, review clean/spec+quality approved). Tests: `python -m unittest tests.test_bjt_bias -v` 4/4 OK. Minor notes parked: invalid-state region contract (`unknown`) and tighter invalid-input assertions.
++- [x] Task 2: complete (commits e8aaa01..f5dcb70, review clean/spec+quality approved). Tests: `python -m unittest tests.test_app` 2/2 OK, `python -m unittest tests.test_bjt_bias` 4/4 OK, test_client smoke GET/POST OK. Minor notes parked: limited UI/error-path test coverage, debug=True in __main__.
++- [ ] Task 3
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-brief.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-brief.md
+new file mode 100644
+index 0000000..47d9d87
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-brief.md
+@@ -0,0 +1,26 @@
++# Task 1: Engineering logic and unit tests
++
++**Files:**
++- Create: `bjt_bias.py`
++- Create: `tests/test_bjt_bias.py`
++
++**Interfaces:**
++- Consumes: numeric inputs `(VCC, R1, R2, RC, RE, beta, VBE)` as floats.
++- Produces: `analyze_bjt_ce(VCC, R1, R2, RC, RE, beta, VBE) -> dict` with keys `VTH,RTH,IB,IC,IE,VB,VE,VC,VCE,region,warnings,errors` (numeric values in base SI units: V, ohm, A) suitable for UI formatting with units.
++
++**Steps:**
++1. Write failing tests in `tests/test_bjt_bias.py` (independent hand calculation + cases).
++   - Active reference (independent hand calc): VCC=12,R1=40000,R2=10000,RC=2000,RE=1000,beta=100,VBE=0.7
++     VTH=12*10/(40+10)=2.4V, RTH=40k||10k=8000ohm
++     IB=(2.4-0.7)/(8000+101000)=1.7/109000 A
++     IC=100*IB, IE=101*IB
++     VCE=12 - IC*2000 - IE*1000, region "active", no errors.
++   - Saturation warning: e.g. VCC=5,R1=10000,R2=10000,RC=10000,RE=100,beta=200,VBE=0.7 => region "saturation", warnings contain "saturation".
++   - Cutoff: e.g. VCC=12,R1=100000,R2=1000,RC=2000,RE=1000,beta=100,VBE=0.7 => region "cutoff", warnings present.
++   - Invalid: R1=0 => errors present.
++2. Run tests to verify fail.
++3. Implement `bjt_bias.py`: `analyze_bjt_ce` with input validation (collect errors, do not raise for UI), Thevenin calculations, VCEsat=0.2, region/warnings logic, return all DC values in base units.
++4. Run tests to verify pass.
++5. Commit: `git add bjt_bias.py tests/test_bjt_bias.py && git commit -m "feat: add BJT CE DC bias logic and tests"`
++
++**Global Constraints:** inputs VCC,R1,R2,RC,RE,beta,VBE; outputs DC operating point with units, validation and region warnings; separate logic/routes/templates/css/tests; no AC/transient/editor/FET; keep existing files intact; VCEsat=0.2V.
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-report.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-report.md
+new file mode 100644
+index 0000000..a5e657e
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-report.md
+@@ -0,0 +1,76 @@
++# Task 1 Report: Engineering logic and unit tests (BJT CE DC bias)
++
++## Status
++Implemented and verified. Commit created.
++
++## What was implemented
++- Created `bjt_bias.py` with `analyze_bjt_ce(VCC, R1, R2, RC, RE, beta, VBE) -> dict`.
++- Returns DC operating-point values in base SI units (V, ohm, A) with keys: `VTH, RTH, IB, IC, IE, VB, VE, VC, VCE, region, warnings, errors`.
++- Input validation collects errors into `errors` (no exceptions raised for UI-facing invalid inputs) and returns numeric outputs as `None` when invalid.
++- Uses Thevenin equivalent: `VTH = VCC*R2/(R1+R2)`, `RTH = R1||R2`.
++- Uses `VCE_SAT = 0.2 V`.
++- Region/warning logic:
++  - **cutoff** when base drive is insufficient (`VTH <= VBE` or computed IB <= 0): currents zeroed, `VB=VTH`, `VE=0`, `VC=VCC`, `VCE=VCC`, warning added.
++  - **saturation** when active-formula `VCE <= VCE_SAT`: region set to `saturation` with warning.
++  - **active** otherwise.
++
++## Files changed
++- `bjt_bias.py` (new): pure engineering logic module.
++- `tests/test_bjt_bias.py` (new): unit tests per brief.
++- Existing files not modified: `electrical.py`, `test_electrical.py`, `README.md`.
++
++## TDD evidence
++
++### RED (tests first, failing as expected)
++Command:
++```powershell
++python -m unittest tests.test_bjt_bias -v
++```
++Result summary (before implementation): failed during import because module did not exist.
++Key output:
++- `ImportError: Failed to import test module: test_bjt_bias`
++- `ModuleNotFoundError: No module named 'bjt_bias'`
++- `Ran 1 test in 0.000s` / `FAILED (errors=1)`
++
++### GREEN (minimal implementation, tests pass)
++Command:
++```powershell
++python -m unittest tests.test_bjt_bias -v
++```
++Result summary: all 4 tests passed.
++Key output:
++- `test_active_reference ... ok`
++- `test_cutoff ... ok`
++- `test_invalid_r1_zero ... ok`
++- `test_saturation_warning ... ok`
++- `Ran 4 tests in 0.000s` / `OK`
++
++Notes: PowerShell reported a native-command nonzero exit code in this environment due to verbose unittest output on stderr, but the unittest result itself is `OK` with 4/4 passing.
++
++## Tests added (per brief)
++- **Active reference** (independent hand calc): `VCC=12,R1=40000,R2=10000,RC=2000,RE=1000,beta=100,VBE=0.7` -> `VTH=2.4V`, `RTH=8000ohm`, `IB=1.7/109000 A`, `IC=100*IB`, `IE=101*IB`, expected node/`VCE` values, `region='active'`, no errors/warnings.
++- **Saturation warning**: `VCC=5,R1=10000,R2=10000,RC=10000,RE=100,beta=200,VBE=0.7` -> `region='saturation'`, warnings include `saturation`.
++- **Cutoff**: `VCC=12,R1=100000,R2=1000,RC=2000,RE=1000,beta=100,VBE=0.7` -> `region='cutoff'`, warnings present.
++- **Invalid input**: `R1=0` -> `errors` present.
++
++## Commit
++- `e8aaa01` — `feat: add BJT CE DC bias logic and tests`
++- Staged/committed only: `bjt_bias.py`, `tests/test_bjt_bias.py`
++
++## Self-review
++- **Correctness:** Active-case math matches the independent hand calculation in the brief (Thevenin divider/parallel, base loop with `(beta+1)*RE`, collector/emitter currents and voltages, `VCE`).
++- **API/shape:** Function name, parameters, and required output keys match spec; outputs are base SI numeric values suitable for later UI unit formatting.
++- **Validation:** Collects errors for non-finite/non-numeric and invalid parameter ranges (including `R1<=0`) instead of raising.
++- **Separation:** Pure logic only in `bjt_bias.py`; tests isolated in `tests/test_bjt_bias.py`; no Flask/routes/templates/css added.
++- **Scope:** No AC, transient, full circuit editor, or FET features; existing files left intact.
++
++## Issues/concerns
++- Saturation is detected and reported as a warning/region based on `VCE <= 0.2V` using the active-region equations; a more physically detailed saturation model would clamp/recompute currents differently, but that is beyond the stated DC-bias operating-point/warning scope.
++- In cutoff, returned `VB=VTH`, `VE=0`, `VC=VCC`, `VCE=VCC` represent the no-conduction DC state consistent with the warning; this matches expected behavior for the specified case.
++- No broader regression suite was run beyond the new task tests (existing repo tests unchanged).
++
++## Verification commands
++```powershell
++python -m unittest tests.test_bjt_bias -v
++& 'C:\Users\B6821241\AppData\Local\Programs\Git\cmd\git.exe' --no-pager log -1 --oneline
++```
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-review-package.txt b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-review-package.txt
+new file mode 100644
+index 0000000..2352c79
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-1-review-package.txt
+@@ -0,0 +1,253 @@
++Base: c8451de
++Head: e8aaa01995ad63b34396f6612bb7e1491f16779c
++
++## Commits
++e8aaa01 feat: add BJT CE DC bias logic and tests
++
++## Stat
++ bjt_bias.py            | 136 +++++++++++++++++++++++++++++++++++++++++++++++++
++ tests/test_bjt_bias.py |  93 +++++++++++++++++++++++++++++++++
++ 2 files changed, 229 insertions(+)
++
++## Diff
++diff --git a/bjt_bias.py b/bjt_bias.py
++new file mode 100644
++index 0000000..f613b4e
++--- /dev/null
+++++ b/bjt_bias.py
++@@ -0,0 +1,136 @@
+++import math
+++
+++VCE_SAT = 0.2
+++
+++
+++def analyze_bjt_ce(VCC, R1, R2, RC, RE, beta, VBE):
+++    """Analyze a BJT common-emitter DC bias circuit.
+++
+++    Inputs: VCC, R1, R2, RC, RE, beta, VBE (numeric).
+++    Returns dict with keys:
+++      VTH, RTH, IB, IC, IE, VB, VE, VC, VCE, region, warnings, errors
+++    Values in base SI units (V, ohm, A). On invalid input, errors are collected
+++    and numeric outputs may be None.
+++    """
+++    errors = []
+++    warnings = []
+++    result = {
+++        "VTH": None,
+++        "RTH": None,
+++        "IB": None,
+++        "IC": None,
+++        "IE": None,
+++        "VB": None,
+++        "VE": None,
+++        "VC": None,
+++        "VCE": None,
+++        "region": "unknown",
+++        "warnings": warnings,
+++        "errors": errors,
+++    }
+++
+++    params = {
+++        "VCC": VCC,
+++        "R1": R1,
+++        "R2": R2,
+++        "RC": RC,
+++        "RE": RE,
+++        "beta": beta,
+++        "VBE": VBE,
+++    }
+++
+++    for name, value in params.items():
+++        if not isinstance(value, (int, float)) or isinstance(value, bool):
+++            errors.append(f"{name} must be a finite number.")
+++            continue
+++        if not math.isfinite(value):
+++            errors.append(f"{name} must be a finite number.")
+++
+++    if errors:
+++        return result
+++
+++    # Basic physical/validity constraints
+++    if VCC < 0:
+++        errors.append("VCC must be non-negative.")
+++    if R1 <= 0:
+++        errors.append("R1 must be greater than zero.")
+++    if R2 <= 0:
+++        errors.append("R2 must be greater than zero.")
+++    if RC < 0:
+++        errors.append("RC must be non-negative.")
+++    if RE < 0:
+++        errors.append("RE must be non-negative.")
+++    if beta <= 0:
+++        errors.append("beta must be greater than zero.")
+++    if VBE < 0:
+++        errors.append("VBE must be non-negative.")
+++    if R1 + R2 == 0:
+++        errors.append("R1 + R2 must be greater than zero.")
+++
+++    if errors:
+++        return result
+++
+++    vth = VCC * R2 / (R1 + R2)
+++    rth = (R1 * R2) / (R1 + R2)
+++
+++    # Determine cutoff by base-emitter loop feasibility (Thevenin view)
+++    vbe_on = VBE
+++    ib = 0.0
+++    ic = 0.0
+++    ie = 0.0
+++    cutoff = vth <= vbe_on
+++
+++    denom = rth + (beta + 1) * RE
+++    if not cutoff and denom <= 0:
+++        errors.append("Invalid bias network (non-positive Thevenin denominator).")
+++        return result
+++
+++    if not cutoff:
+++        ib_calc = (vth - vbe_on) / denom
+++        if ib_calc <= 0:
+++            cutoff = True
+++        else:
+++            ib = ib_calc
+++            ic = beta * ib
+++            ie = (beta + 1) * ib
+++
+++    vb = vth - ib * rth
+++    ve = ie * RE
+++    vc = VCC - ic * RC
+++    vce = vc - ve
+++
+++    if cutoff:
+++        ib = 0.0
+++        ic = 0.0
+++        ie = 0.0
+++        vb = vth
+++        ve = 0.0
+++        vc = VCC
+++        vce = VCC
+++        region = "cutoff"
+++        warnings.append("Transistor is in cutoff (insufficient base drive).")
+++    else:
+++        # Active/saturation determination using VCEsat
+++        if vce <= VCE_SAT:
+++            region = "saturation"
+++            warnings.append(f"Transistor is in saturation (VCE <= {VCE_SAT} V).")
+++        else:
+++            region = "active"
+++
+++    result.update(
+++        {
+++            "VTH": vth,
+++            "RTH": rth,
+++            "IB": ib,
+++            "IC": ic,
+++            "IE": ie,
+++            "VB": vb,
+++            "VE": ve,
+++            "VC": vc,
+++            "VCE": vce,
+++            "region": region,
+++            "warnings": warnings,
+++            "errors": errors,
+++        }
+++    )
+++    return result
++diff --git a/tests/test_bjt_bias.py b/tests/test_bjt_bias.py
++new file mode 100644
++index 0000000..fdee088
++--- /dev/null
+++++ b/tests/test_bjt_bias.py
++@@ -0,0 +1,93 @@
+++import math
+++import unittest
+++
+++from bjt_bias import analyze_bjt_ce
+++
+++
+++class TestBJTBias(unittest.TestCase):
+++    def test_active_reference(self):
+++        # Independent hand calculation:
+++        # VTH=12*10/(40+10)=2.4V, RTH=40k||10k=8000ohm
+++        # IB=(2.4-0.7)/(8000+101000)=1.7/109000 A
+++        # IC=100*IB, IE=101*IB
+++        # VCE=12 - IC*2000 - IE*1000, region "active", no errors.
+++        result = analyze_bjt_ce(
+++            VCC=12,
+++            R1=40000,
+++            R2=10000,
+++            RC=2000,
+++            RE=1000,
+++            beta=100,
+++            VBE=0.7,
+++        )
+++        vth = 12 * 10 / (40 + 10)
+++        rth = (40000 * 10000) / (40000 + 10000)
+++        ib = (2.4 - 0.7) / (8000 + 101000)
+++        ic = 100 * ib
+++        ie = 101 * ib
+++        vb = vth - ib * rth
+++        ve = ie * 1000
+++        vc = 12 - ic * 2000
+++        vce = 12 - ic * 2000 - ie * 1000
+++
+++        self.assertEqual(result["errors"], [])
+++        self.assertEqual(result["warnings"], [])
+++        self.assertEqual(result["region"], "active")
+++        self.assertAlmostEqual(result["VTH"], vth, places=12)
+++        self.assertAlmostEqual(result["RTH"], rth, places=12)
+++        self.assertAlmostEqual(result["IB"], ib, places=15)
+++        self.assertAlmostEqual(result["IC"], ic, places=15)
+++        self.assertAlmostEqual(result["IE"], ie, places=15)
+++        self.assertAlmostEqual(result["VB"], vb, places=12)
+++        self.assertAlmostEqual(result["VE"], ve, places=12)
+++        self.assertAlmostEqual(result["VC"], vc, places=12)
+++        self.assertAlmostEqual(result["VCE"], vce, places=12)
+++
+++    def test_saturation_warning(self):
+++        # VCC=5,R1=10000,R2=10000,RC=10000,RE=100,beta=200,VBE=0.7 => region "saturation", warnings contain "saturation".
+++        result = analyze_bjt_ce(
+++            VCC=5,
+++            R1=10000,
+++            R2=10000,
+++            RC=10000,
+++            RE=100,
+++            beta=200,
+++            VBE=0.7,
+++        )
+++        self.assertEqual(result["errors"], [])
+++        self.assertEqual(result["region"], "saturation")
+++        self.assertTrue(
+++            any("saturation" in w.lower() for w in result["warnings"]),
+++            msg=f"warnings={result['warnings']}",
+++        )
+++
+++    def test_cutoff(self):
+++        # VCC=12,R1=100000,R2=1000,RC=2000,RE=1000,beta=100,VBE=0.7 => region "cutoff", warnings present.
+++        result = analyze_bjt_ce(
+++            VCC=12,
+++            R1=100000,
+++            R2=1000,
+++            RC=2000,
+++            RE=1000,
+++            beta=100,
+++            VBE=0.7,
+++        )
+++        self.assertEqual(result["errors"], [])
+++        self.assertEqual(result["region"], "cutoff")
+++        self.assertTrue(result["warnings"], msg="expected warnings present")
+++
+++    def test_invalid_r1_zero(self):
+++        result = analyze_bjt_ce(
+++            VCC=12,
+++            R1=0,
+++            R2=10000,
+++            RC=2000,
+++            RE=1000,
+++            beta=100,
+++            VBE=0.7,
+++        )
+++        self.assertTrue(result["errors"], msg="expected errors present")
+++
+++
+++if __name__ == "__main__":
+++    unittest.main()
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-brief.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-brief.md
+new file mode 100644
+index 0000000..9fdc621
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-brief.md
+@@ -0,0 +1,20 @@
++# Task 2: Flask app, templates, and CSS
++
++**Files:**
++- Create: `app.py`
++- Create: `templates/index.html`
++- Create: `static/style.css`
++- Create: `tests/test_app.py`
++
++**Interfaces:**
++- Consumes: `analyze_bjt_ce` from `bjt_bias.py`.
++- Produces: running Flask app at `/` with form inputs VCC,R1,R2,RC,RE,beta,VBE, results table with units, and validation/region warnings.
++
++**Steps:**
++1. Write failing app/smoke tests in `tests/test_app.py` (GET / 200 contains VCC; POST computes and response contains VCE).
++2. Run tests to verify fail.
++3. Implement `app.py` (parse POST to floats, call analyze_bjt_ce, handle non-numeric gracefully), `templates/index.html` (labeled 7 inputs, submit, results table VTH(V),RTH(Ω),IB(A),IC(A),IE(A),VB(V),VE(V),VC(V),VCE(V), region, warning/error blocks), `static/style.css` (simple readable layout).
++4. Run all tests and manual localhost check.
++5. Commit.
++
++**Global Constraints:** inputs VCC,R1,R2,RC,RE,beta,VBE; outputs with units, validation/region warnings; separate logic/routes/templates/css/tests; keep existing files intact.
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-report.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-report.md
+new file mode 100644
+index 0000000..605162e
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-report.md
+@@ -0,0 +1,68 @@
++# Task 2 Report: Flask app, templates, and CSS (BJT CE DC bias)
++
++## Status
++DONE
++
++## What implemented
++- **`app.py`**: Flask app with `GET/POST /`.
++  - Defines the 7 input fields `VCC, R1, R2, RC, RE, beta, VBE` with sensible defaults.
++  - `_parse_inputs` parses POST form values to floats, treats empty as required error, and rejects non-numeric/non-finite values gracefully (collects parse errors instead of raising).
++  - On successful parse, calls `analyze_bjt_ce(**numeric)` from `bjt_bias.py` and renders results.
++  - Re-renders form with entered values and separate `parse_errors` block when input parsing fails; displays logic `result.errors`/`result.warnings` and results when analysis runs.
++- **`templates/index.html`**: Labeled inputs for all 7 parameters with submit button; results panel showing `Region`, results table with columns `VTH (V), RTH (Ω), IB (A), IC (A), IE (A), VB (V), VE (V), VC (V), VCE (V)`, and separate warning/error blocks for parse errors, validation errors, and warnings. Renders `—` for `None` numeric outputs.
++- **`static/style.css`**: Simple readable layout (grid form, card panels, styled table, distinct error/warning styling).
++- **`tests/test_app.py`**: Smoke/app tests using Flask `test_client`:
++  - `GET /` returns 200 and response contains `VCC`.
++  - `POST /` with valid reference inputs computes and response contains `VCE`.
++
++## TDD evidence
++
++### RED (failing before implementation)
++Command:
++```powershell
++python -m unittest tests.test_app 2>&1 | Select-Object -Last 40
++```
++Result summary (FAILED, errors=2): `ModuleNotFoundError: No module named 'app'` for both `test_get_index_contains_vcc` and `test_post_computes_and_contains_vce`. (2 tests ran, 0.003s)
++
++### GREEN (after implementation)
++Commands:
++```powershell
++python -m unittest tests.test_app 2>&1 | Select-Object -Last 30
++python -m unittest tests.test_bjt_bias 2>&1 | Select-Object -Last 30
++python -c "from app import app; c=app.test_client(); r=c.get('/'); print(r.status_code, 'VCC' in r.get_data(as_text=True)); r=c.post('/', data={'VCC':'12','R1':'40000','R2':'10000','RC':'2000','RE':'1000','beta':'100','VBE':'0.7'}); print(r.status_code, 'VCE' in r.get_data(as_text=True))"
++```
++Results:
++- `tests.test_app`: `Ran 2 tests in 0.307s` — **OK**
++- `tests.test_bjt_bias`: `Ran 4 tests in 0.000s` — **OK**
++- Manual smoke via test_client (localhost-equivalent request cycle): `200 True` (GET contains VCC), `200 True` (POST computes and contains VCE)
++
++Notes: In this PowerShell environment, unittest/print output routed through stderr/warnings caused non-zero exit codes when captured with `2>&1`, but the test summaries and smoke output show all assertions passing.
++
++## Tests run and results (summary)
++| Command | Result |
++|---|---|
++| `python -m unittest tests.test_app` | 2 tests, OK |
++| `python -m unittest tests.test_bjt_bias` | 4 tests, OK |
++| Inline `test_client` GET/POST smoke | `200 True`, `200 True` (VCC/VCE present) |
++
++## Files changed
++- Created: `app.py`
++- Created: `templates/index.html`
++- Created: `static/style.css`
++- Created: `tests/test_app.py`
++
++## Commit
++- `f5dcb70` — `feat: add Flask UI for BJT CE DC bias calculator` (4 files changed, 201 insertions)
++
++## Self-review findings
++- Requirements met: 7 labeled inputs and submit; results table with requested headers/units `VTH(V),RTH(Ω),IB(A),IC(A),IE(A),VB(V),VE(V),VC(V),VCE(V)`; region and warning/error blocks displayed; POST parses to floats and handles non-numeric/empty/non-finite gracefully via parse errors; logic errors/warnings from `analyze_bjt_ce` surfaced in UI.
++- Separation of concerns preserved: analysis in `bjt_bias.py`, routes in `app.py`, view in `templates/index.html`, styling in `static/style.css`, tests in `tests/`.
++- Existing files (`electrical.py`, `test_electrical.py`, `README.md`, `bjt_bias.py`, existing tests) not modified.
++- `analyze_bjt_ce` may return `region="unknown"` with `None` numeric outputs on invalid input; template handles this by showing `—` and error/warning blocks.
++
++## Issues / concerns
++- **Flask not preinstalled**: installed via `python -m pip install flask` (Flask 3.1.3) to complete implementation; install emitted PATH warning for user scripts and a pip update notice.
++- **No `pytest` installed**: existing/project tests run successfully with `unittest` as shown; `python -m pytest` unavailable in environment.
++- **Raw numeric display**: results render Python float/string values without fixed formatting/scientific notation; values are correct but can be long (e.g. small currents). Acceptable for base SI-unit output but could be formatted for readability in future.
++- **No live server smoke**: did not start a persistent `localhost` dev server process; verified equivalent request/response behavior via Flask `test_client` GET/POST (and app is runnable via `python app.py`).
++- Unrelated untracked paths (`.superpowers/`, `docs/`) left untouched and uncommitted as required.
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-review-package.txt b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-review-package.txt
+new file mode 100644
+index 0000000..a431e98
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-2-review-package.txt
+@@ -0,0 +1,239 @@
++Base: e8aaa01995ad63b34396f6612bb7e1491f16779c
++Head: f5dcb701597f4c5afc533ad9989c8b1984e989b2
++
++## Commits
++f5dcb70 feat: add Flask UI for BJT CE DC bias calculator
++
++## Stat
++ app.py               | 67 +++++++++++++++++++++++++++++++++++++++++++
++ static/style.css     | 21 ++++++++++++++
++ templates/index.html | 81 ++++++++++++++++++++++++++++++++++++++++++++++++++++
++ tests/test_app.py    | 32 +++++++++++++++++++++
++ 4 files changed, 201 insertions(+)
++
++## Diff
++diff --git a/app.py b/app.py
++new file mode 100644
++index 0000000..ade9e03
++--- /dev/null
+++++ b/app.py
++@@ -0,0 +1,67 @@
+++import math
+++from flask import Flask, render_template, request
+++
+++from bjt_bias import analyze_bjt_ce
+++
+++app = Flask(__name__)
+++
+++FIELDS = ["VCC", "R1", "R2", "RC", "RE", "beta", "VBE"]
+++DEFAULTS = {
+++    "VCC": "12",
+++    "R1": "40000",
+++    "R2": "10000",
+++    "RC": "2000",
+++    "RE": "1000",
+++    "beta": "100",
+++    "VBE": "0.7",
+++}
+++
+++
+++def _parse_inputs(form):
+++    values = {}
+++    errors = []
+++    for field in FIELDS:
+++        raw = (form.get(field) or "").strip()
+++        values[field] = raw
+++        if raw == "":
+++            errors.append(f"{field} is required.")
+++            continue
+++        try:
+++            num = float(raw)
+++        except (TypeError, ValueError):
+++            errors.append(f"{field} must be a number.")
+++            continue
+++        if not math.isfinite(num):
+++            errors.append(f"{field} must be a finite number.")
+++            continue
+++        values[field] = num
+++    return values, errors
+++
+++
+++@app.route("/", methods=["GET", "POST"])
+++def index():
+++    inputs = DEFAULTS.copy()
+++    result = None
+++    parse_errors = []
+++    if request.method == "POST":
+++        parsed, parse_errors = _parse_inputs(request.form)
+++        # keep raw strings for form re-fill when parsing fails
+++        inputs = {k: (str(v) if not isinstance(v, str) else v) for k, v in parsed.items()}
+++        if not parse_errors:
+++            numeric = {k: float(parsed[k]) for k in FIELDS}
+++            result = analyze_bjt_ce(**numeric)
+++        else:
+++            # still show form values entered
+++            for field in FIELDS:
+++                inputs[field] = request.form.get(field, "")
+++    return render_template(
+++        "index.html",
+++        inputs=inputs,
+++        result=result,
+++        parse_errors=parse_errors,
+++        fields=FIELDS,
+++    )
+++
+++
+++if __name__ == "__main__":
+++    app.run(debug=True)
++diff --git a/static/style.css b/static/style.css
++new file mode 100644
++index 0000000..8441107
++--- /dev/null
+++++ b/static/style.css
++@@ -0,0 +1,21 @@
+++:root { --bg:#f6f8fb; --card:#fff; --text:#1d2433; --muted:#5b6475; --border:#d7dde8; --accent:#1f6feb; --error:#b42318; --error-bg:#fef3f2; --warn:#b54708; --warn-bg:#fffaeb; }
+++* { box-sizing: border-box; }
+++body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); line-height:1.4; }
+++.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+++h1 { margin: 0 0 4px; font-size: 1.8rem; }
+++.subtitle { margin: 0 0 20px; color: var(--muted); }
+++.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: var(--card); border:1px solid var(--border); border-radius: 10px; padding: 16px; }
+++label { display:flex; flex-direction:column; font-size: 0.95rem; font-weight:600; gap:4px; }
+++input { padding:8px 10px; border:1px solid var(--border); border-radius:6px; font-size:1rem; }
+++.actions { display:flex; align-items:flex-end; }
+++button { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:10px 16px; font-size:1rem; cursor:pointer; }
+++button:hover { filter: brightness(0.95); }
+++.panel { margin-top:16px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+++.panel h2 { margin:0 0 8px; font-size:1.1rem; }
+++.panel.error { border-color:#fecdca; background:var(--error-bg); color:var(--error); }
+++.panel.warning { border-color:#fedf89; background:var(--warn-bg); color:var(--warn); }
+++.panel.error ul, .panel.warning ul { margin:0; padding-left:20px; color:inherit; }
+++table { width:100%; border-collapse: collapse; font-size:0.95rem; }
+++th, td { border:1px solid var(--border); padding:8px; text-align:left; word-break: break-word; }
+++th { background:#f0f4fa; }
+++p { margin: 4px 0 10px; }
++diff --git a/templates/index.html b/templates/index.html
++new file mode 100644
++index 0000000..b18a13a
++--- /dev/null
+++++ b/templates/index.html
++@@ -0,0 +1,81 @@
+++<!doctype html>
+++<html lang="en">
+++<head>
+++  <meta charset="utf-8">
+++  <meta name="viewport" content="width=device-width, initial-scale=1">
+++  <title>BJT CE DC Bias Calculator</title>
+++  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+++</head>
+++<body>
+++  <main class="container">
+++    <h1>BJT Common-Emitter DC Bias Calculator</h1>
+++    <p class="subtitle">Enter circuit parameters to compute the DC operating point.</p>
+++
+++    <form method="post" class="form-grid">
+++      <label>VCC (V)<input type="text" name="VCC" value="{{ inputs['VCC'] }}" required></label>
+++      <label>R1 (Ω)<input type="text" name="R1" value="{{ inputs['R1'] }}" required></label>
+++      <label>R2 (Ω)<input type="text" name="R2" value="{{ inputs['R2'] }}" required></label>
+++      <label>RC (Ω)<input type="text" name="RC" value="{{ inputs['RC'] }}" required></label>
+++      <label>RE (Ω)<input type="text" name="RE" value="{{ inputs['RE'] }}" required></label>
+++      <label>beta<input type="text" name="beta" value="{{ inputs['beta'] }}" required></label>
+++      <label>VBE (V)<input type="text" name="VBE" value="{{ inputs['VBE'] }}" required></label>
+++      <div class="actions"><button type="submit">Compute</button></div>
+++    </form>
+++
+++    {% if parse_errors %}
+++    <section class="panel error">
+++      <h2>Input Errors</h2>
+++      <ul>
+++        {% for e in parse_errors %}<li>{{ e }}</li>{% endfor %}
+++      </ul>
+++    </section>
+++    {% endif %}
+++
+++    {% if result %}
+++      {% if result.errors %}
+++      <section class="panel error">
+++        <h2>Validation Errors</h2>
+++        <ul>
+++          {% for e in result.errors %}<li>{{ e }}</li>{% endfor %}
+++        </ul>
+++      </section>
+++      {% endif %}
+++
+++      {% if result.warnings %}
+++      <section class="panel warning">
+++        <h2>Warnings</h2>
+++        <ul>
+++          {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
+++        </ul>
+++      </section>
+++      {% endif %}
+++
+++      <section class="panel">
+++        <h2>DC Operating Point</h2>
+++        <p><strong>Region:</strong> {{ result.region }}</p>
+++        <table>
+++          <thead>
+++            <tr>
+++              <th>VTH (V)</th><th>RTH (Ω)</th><th>IB (A)</th><th>IC (A)</th><th>IE (A)</th>
+++              <th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th>
+++            </tr>
+++          </thead>
+++          <tbody>
+++            <tr>
+++              <td>{{ result.VTH if result.VTH is not none else '—' }}</td>
+++              <td>{{ result.RTH if result.RTH is not none else '—' }}</td>
+++              <td>{{ result.IB if result.IB is not none else '—' }}</td>
+++              <td>{{ result.IC if result.IC is not none else '—' }}</td>
+++              <td>{{ result.IE if result.IE is not none else '—' }}</td>
+++              <td>{{ result.VB if result.VB is not none else '—' }}</td>
+++              <td>{{ result.VE if result.VE is not none else '—' }}</td>
+++              <td>{{ result.VC if result.VC is not none else '—' }}</td>
+++              <td>{{ result.VCE if result.VCE is not none else '—' }}</td>
+++            </tr>
+++          </tbody>
+++        </table>
+++      </section>
+++    {% endif %}
+++  </main>
+++</body>
+++</html>
++diff --git a/tests/test_app.py b/tests/test_app.py
++new file mode 100644
++index 0000000..e569495
++--- /dev/null
+++++ b/tests/test_app.py
++@@ -0,0 +1,32 @@
+++import unittest
+++
+++
+++class TestApp(unittest.TestCase):
+++    def setUp(self):
+++        import app
+++
+++        self.client = app.app.test_client()
+++        self.client.testing = True
+++
+++    def test_get_index_contains_vcc(self):
+++        resp = self.client.get("/")
+++        self.assertEqual(resp.status_code, 200)
+++        self.assertIn(b"VCC", resp.data)
+++
+++    def test_post_computes_and_contains_vce(self):
+++        payload = {
+++            "VCC": "12",
+++            "R1": "40000",
+++            "R2": "10000",
+++            "RC": "2000",
+++            "RE": "1000",
+++            "beta": "100",
+++            "VBE": "0.7",
+++        }
+++        resp = self.client.post("/", data=payload)
+++        self.assertEqual(resp.status_code, 200)
+++        self.assertIn(b"VCE", resp.data)
+++
+++
+++if __name__ == "__main__":
+++    unittest.main()
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-brief.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-brief.md
+new file mode 100644
+index 0000000..73b1acf
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-brief.md
+@@ -0,0 +1,11 @@
++# Task 3: Final verification, demo readiness, and GitHub commit
++
++**Files:**
++- Modify `README.md` only if needed (minimal), no breaking existing content.
++
++**Steps:**
++1. Run full verification `python -m pytest -q`.
++2. Smoke-run localhost app.
++3. Final commit/report. Note if no remote configured.
++
++**Global Constraints:** keep existing files intact.
+diff --git a/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-report.md b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-report.md
+new file mode 100644
+index 0000000..2412ff8
+--- /dev/null
++++ b/.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/task-3-report.md
+@@ -0,0 +1,123 @@
++# Task 3 Report: Final verification, demo readiness, and GitHub commit
++
++**Date:** 2026-11-10  
++**Workspace:** `C:\Users\B6821241\Desktop\gitlab`  
++**Git:** `C:\Users\B6821241\AppData\Local\Programs\Git\cmd\git.exe`
++
++## 1. Full verification
++
++`pytest` is not installed in this environment (`python -m pytest -q` failed with `No module named pytest`). Per instructions, ran full verification via `unittest` for all relevant test modules (root legacy test and `tests/` package).
++
++### Commands and results
++
++**Attempted pytest:**
++```text
++$ python -m pytest -q
++C:\Program Files\Python312\python.exe: No module named pytest
++EXIT:1
++```
++
++**Existing/legacy test:**
++```text
++$ python -m unittest -v test_electrical
++test_known_values (test_electrical.TestDCanalyzer.test_known_values) ... ok
++test_zero_voltage (test_electrical.TestDCanalyzer.test_zero_voltage) ... ok
++----------------------------------------------------------------------
++Ran 2 tests in 0.000s
++OK
++```
++
++**BJT/Flask app tests (tests/):**
++```text
++$ python -m unittest discover -v -s tests
++test_get_index_contains_vcc (test_app.TestApp.test_get_index_contains_vcc) ... ok
++test_post_computes_and_contains_vce (test_app.TestApp.test_post_computes_and_contains_vce) ... ok
++test_active_reference (test_bjt_bias.TestBJTBias.test_active_reference) ... ok
++test_cutoff (test_bjt_bias.TestBJTBias.test_cutoff) ... ok
++test_invalid_r1_zero (test_bjt_bias.TestBJTBias.test_invalid_r1_zero) ... ok
++test_saturation_warning (test_bjt_bias.TestBJTBias.test_saturation_warning) ... ok
++----------------------------------------------------------------------
++Ran 6 tests in ~0.22-0.29s
++OK
++EXIT:0
++```
++
++**Summary:** 8 tests total passed (2 in `test_electrical.py`, 6 in `tests/`: 4 `test_bjt_bias`, 2 `test_app`). No failures.
++
++## 2. Localhost smoke-run (demo readiness)
++
++**Start command (background):**
++```text
++$ python app.py
++* Serving Flask app 'app'
++* Debug mode: on
++* Running on http://127.0.0.1:5000
++```
++(Flask debug reloader spawned PIDs 20800, 20836 during run.)
++
++**HTTP verification (after ~2s startup):**
++```text
++$ python -c "import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:5000/'); b=r.read(); print('STATUS:', r.status); print('HAS_VCC:', b'VCC' in b); print('HAS_FORM:', b'<form' in b.lower()); print('SNIP:', b[:120])"
++
++STATUS: 200
++HAS_VCC: True
++HAS_FORM: True
++SNIP: b'<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, in'
++EXIT:0
++```
++
++**Stop:** Server processes stopped with `Stop-Process -Id 20800,20836 -Force`; port 5000 no longer listening. Background shell exited after stop (expected).
++
++**Evidence:** Homepage responds HTTP 200 and contains `VCC` and a `<form>` element, indicating the input UI is rendered and demo-ready.
++
++## 3. Git status, commit, and remote
++
++### Status before final commit
++```text
++$ git status --short
++?? .superpowers/
++?? docs/
++```
++
++Untracked contents (sensible lab artifacts): `docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md`, `docs/superpowers/plans/2026-11-10-bjt-ce-dc-bias.md`, and `.superpowers/sdd/2026-11-10-bjt-ce-dc-bias/` (progress, task briefs/reports/review packages for tasks 1-3). No modified tracked files.
++
++### Remote
++```text
++$ git remote -v
++origin  https://github.com/bank3939/gitlab.git (fetch)
++origin  https://github.com/bank3939/gitlab.git (push)
++```
++Remote is configured (`origin`). **No push performed** (and none claimed).
++
++### Recent history (before this commit)
++```text
++f5dcb70 feat: add Flask UI for BJT CE DC bias calculator
++e8aaa01 feat: add BJT CE DC bias logic and tests
++c8451de test: verify DC circuit results
++6364d9d test: verify DC circuit results
++dd1a893 test: verify DC circuit results
++```
++
++### Final commit
++Staged docs/specs/plans and SDD ledger (including this report) as remaining necessary project artifacts for the lab; avoided junk/`__pycache__` (not tracked/untracked in status).
++- **Commit:** `36ccee8` — `docs: add BJT CE DC bias specs, plans, and SDD records` (11 files, amended to include finalized report).
++
++**Post-commit log:**
++```text
++$ git log --oneline -3
++36ccee8 docs: add BJT CE DC bias specs, plans, and SDD records
++f5dcb70 feat: add Flask UI for BJT CE DC bias calculator
++e8aaa01 feat: add BJT CE DC bias logic and tests
++```
++
++## 4. Issues / concerns
++
++- **pytest unavailable:** `python -m pytest -q` could not run; used `unittest` instead. All relevant modules (`test_electrical`, `tests.test_bjt_bias`, `tests.test_app`) pass.
++- **unittest discover default behavior:** plain `python -m unittest discover -v` from repo root only ran root `test_electrical.py` (2 tests) in this layout; `discover -v -s tests` and explicit module runs covered the BJT/Flask suite. Reported full results above.
++- **Flask dev server:** started with `debug=True` via `python app.py` (development server) for smoke test only, then stopped.
++- **README not modified:** existing `README.md` left intact (no breaking changes needed).
++- **Remote configured but not pushed:** origin exists; push not attempted per instructions.
++
++## 5. Files intact (spot-check)
++
++Existing files preserved: `electrical.py`, `test_electrical.py`, `README.md` unchanged by this task. App/test artifacts from prior tasks present: `bjt_bias.py`, `app.py`, `templates/index.html`, `static/style.css`, `tests/`. `__pycache__/` present locally but not committed.
+diff --git a/docs/superpowers/plans/2026-11-10-bjt-ce-dc-bias.md b/docs/superpowers/plans/2026-11-10-bjt-ce-dc-bias.md
+new file mode 100644
+index 0000000..bf868d6
+--- /dev/null
++++ b/docs/superpowers/plans/2026-11-10-bjt-ce-dc-bias.md
+@@ -0,0 +1,183 @@
++# BJT Common-Emitter DC Bias Web App Implementation Plan
++
++> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
++
++**Goal:** Build the smallest working Flask web app that computes and displays the DC operating point of a BJT common-emitter voltage-divider bias circuit with units, validation/region warnings, and tests compared to an independent engineering calculation.
++
++**Architecture:** Pure Python engineering logic in `bjt_bias.py` performs validation and Thevenin-bias DC calculations; `app.py` contains only Flask routes/input parsing and rendering. A single Jinja template and CSS present inputs/results/warnings. Tests verify logic against hand-calculated reference values and edge conditions.
++
++**Tech Stack:** Python 3.12, Flask, Jinja2 templates, CSS, pytest/unittest (`python -m pytest` or `unittest`).
++
++**Spec:** `docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md`
++
++## Global Constraints
++- Inputs exactly: `VCC, R1, R2, RC, RE, beta, VBE`.
++- Outputs: DC operating point with units, validation and region warnings.
++- Separate Python engineering logic, Flask routes, HTML templates, CSS and tests.
++- No AC, transient, full circuit editor, or FET.
++- Keep existing workspace files (`electrical.py`, `test_electrical.py`, `README.md`) intact.
++- `VCEsat = 0.2 V` for saturation warning (default).
++
++## Review Focus
++- Non-numeric/blank inputs: show clear validation error, no crash/500.
++- Non-physical values (e.g. `R1<=0`, `beta<=0`, `VCC<=0`): rejected with warning/error.
++- Cutoff condition (`VTH <= VBE` or `IB <= 0`): region reported as cutoff with warning, values shown consistently.
++- Saturation condition (`VCE <= 0.2 V`): saturation warning while still reporting computed operating point.
++- Divider edge cases (`R1+R2` issues avoided by validation): no divide-by-zero.
++
++---
++
++### Task 1: Engineering logic and unit tests
++
++**Files:**
++- Create: `bjt_bias.py`
++- Create: `tests/test_bjt_bias.py`
++
++**Interfaces:**
++- Consumes: numeric inputs `(VCC, R1, R2, RC, RE, beta, VBE)` as floats.
++- Produces: `analyze_bjt_ce(VCC, R1, R2, RC, RE, beta, VBE) -> dict` with keys `VTH,RTH,IB,IC,IE,VB,VE,VC,VCE,region,warnings,errors` (numeric values in base SI units: V, ohm, A) suitable for UI formatting with units.
++
++- [ ] **Step 1: Write the failing tests (independent hand calculation + cases)**
++
++```python
++# tests/test_bjt_bias.py
++import math
++import unittest
++from bjt_bias import analyze_bjt_ce
++
++class TestBjtBias(unittest.TestCase):
++    def test_active_region_reference_case(self):
++        # Independent hand calc: VCC=12,R1=40k,R2=10k,RC=2k,RE=1k,beta=100,VBE=0.7
++        # VTH=12*10/(40+10)=2.4V, RTH=40k||10k=8k
++        # IB=(2.4-0.7)/(8000+101000)=1.7/109000=1.559633e-5A
++        # IC=1.559633e-3A, IE=1.575229e-3A
++        # VE=1.575229V, VC=12-3.119266=8.880734V, VCE=7.305505V
++        r = analyze_bjt_ce(12, 40000, 10000, 2000, 1000, 100, 0.7)
++        self.assertAlmostEqual(r["VTH"], 2.4, places=6)
++        self.assertAlmostEqual(r["RTH"], 8000.0, places=6)
++        self.assertAlmostEqual(r["IB"], 1.7/109000, places=10)
++        self.assertAlmostEqual(r["IC"], 100*1.7/109000, places=9)
++        self.assertAlmostEqual(r["IE"], 101*1.7/109000, places=9)
++        self.assertAlmostEqual(r["VCE"], 12 - (100*1.7/109000)*2000 - (101*1.7/109000)*1000, places=6)
++        self.assertEqual(r["region"], "active")
++        self.assertFalse(r["errors"])
++
++    def test_saturation_warning(self):
++        r = analyze_bjt_ce(5, 10000, 10000, 10000, 100, 200, 0.7)
++        self.assertEqual(r["region"], "saturation")
++        self.assertTrue(any("saturation" in w.lower() for w in r["warnings"]))
++
++    def test_cutoff_warning(self):
++        r = analyze_bjt_ce(12, 100000, 1000, 2000, 1000, 100, 0.7)
++        self.assertEqual(r["region"], "cutoff")
++        self.assertTrue(r["warnings"])
++
++    def test_invalid_inputs(self):
++        r = analyze_bjt_ce(12, 0, 10000, 2000, 1000, 100, 0.7)
++        self.assertTrue(r["errors"])
++```
++
++- [ ] **Step 2: Run tests to verify they fail**
++
++Run: `python -m pytest tests/test_bjt_bias.py -v` (or `python -m unittest tests.test_bjt_bias -v`)
++Expected: FAIL (module/function missing).
++
++- [ ] **Step 3: Implement `bjt_bias.py`**
++
++Implement `analyze_bjt_ce` with input validation (collect errors, do not raise for UI), Thevenin calculations, `VCEsat=0.2`, region/warnings logic, and return all DC values in base units. Ensure math uses floats and handles edge cases safely.
++
++- [ ] **Step 4: Run tests to verify they pass**
++
++Run: `python -m pytest tests/test_bjt_bias.py -v`
++Expected: PASS.
++
++- [ ] **Step 5: Commit**
++
++```bash
++git add bjt_bias.py tests/test_bjt_bias.py
++git commit -m "feat: add BJT CE DC bias logic and tests"
++```
++
++### Task 2: Flask app, templates, and CSS
++
++**Files:**
++- Create: `app.py`
++- Create: `templates/index.html`
++- Create: `static/style.css`
++- Create: `tests/test_app.py` (minimal route/smoke test)
++
++**Interfaces:**
++- Consumes: `analyze_bjt_ce` from `bjt_bias.py`.
++- Produces: running Flask app at `/` with form inputs `VCC,R1,R2,RC,RE,beta,VBE`, results table with units, and validation/region warnings.
++
++- [ ] **Step 1: Write failing app/smoke tests**
++
++```python
++# tests/test_app.py
++import unittest
++from app import app
++
++class TestApp(unittest.TestCase):
++    def setUp(self):
++        self.client = app.test_client()
++
++    def test_get_index(self):
++        resp = self.client.get('/')
++        self.assertEqual(resp.status_code, 200)
++        self.assertIn(b'VCC', resp.data)
++
++    def test_post_computes(self):
++        resp = self.client.post('/', data=dict(VCC='12',R1='40000',R2='10000',RC='2000',RE='1000',beta='100',VBE='0.7'))
++        self.assertEqual(resp.status_code, 200)
++        self.assertIn(b'VCE', resp.data)
++```
++
++- [ ] **Step 2: Run tests to verify they fail**
++
++Run: `python -m pytest tests/test_app.py -v`
++Expected: FAIL (app missing).
++
++- [ ] **Step 3: Implement `app.py`, `templates/index.html`, `static/style.css`**
++
++- `app.py`: parse POST form to floats, call `analyze_bjt_ce`, pass inputs/results/errors/warnings; handle non-numeric input gracefully.
++- Template: labeled form fields for all 7 inputs, submit, results table showing `VTH (V), RTH (Ω), IB (A), IC (A), IE (A), VB (V), VE (V), VC (V), VCE (V)` and region, warning/error blocks.
++- CSS: simple readable layout.
++
++- [ ] **Step 4: Run all tests and manual localhost check**
++
++Run: `python -m pytest -q` (and/or `python -m unittest discover -v`)
++Expected: PASS. Then run `python app.py` (or `flask --app app run`) and verify page loads at localhost.
++
++- [ ] **Step 5: Commit**
++
++```bash
++git add app.py templates/index.html static/style.css tests/test_app.py
++git commit -m "feat: add Flask UI for BJT CE DC bias calculator"
++```
++
++### Task 3: Final verification, demo readiness, and GitHub commit
++
++**Files:**
++- Modify (if needed): `README.md` (brief run/test instructions for this lab, without removing prior content intent) — optional/minimal.
++
++**Interfaces:**
++- Produces: verified test run output, localhost demo readiness, and final commit(s) pushed/prepared as repo state allows.
++
++- [ ] **Step 1: Run full verification**
++
++Run: `python -m pytest -q`
++Expected: all tests pass, including reference-case comparison.
++
++- [ ] **Step 2: Smoke-run localhost app**
++
++Run: `python app.py` and confirm form + results/warnings render.
++Expected: working demo on localhost.
++
++- [ ] **Step 3: Final commit and report**
++
++```bash
++git add -A
++git status
++git commit -m "chore: finalize BJT CE DC bias lab app" (if needed)
++```
++Note: if no git remote/repo configured, report status and provide commit hash/readiness.
+diff --git a/docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md b/docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md
+new file mode 100644
+index 0000000..150374e
+--- /dev/null
++++ b/docs/superpowers/specs/2026-11-10-bjt-ce-dc-bias-design.md
+@@ -0,0 +1,38 @@
++# BJT Common-Emitter DC Bias Web App — Short Design (ENG29 2121)
++
++**Approved:** 2026-11-10 (user: "ใช่ ทำเลย")
++
++## Intent and why
++Smallest working Flask web application for a short lab to compute the DC operating point of a BJT common-emitter voltage-divider bias circuit, with units, validation/region warnings, and comparison to an independent engineering calculation. Needed for a running localhost demo and GitHub commit today.
++
++## Goals
++- Separate Python engineering logic, Flask routes, HTML templates, CSS, and tests.
++- Inputs: `VCC`, `R1`, `R2`, `RC`, `RE`, `beta`, `VBE`.
++- Outputs: DC operating point with units, validation and region warnings.
++- Compare results with an independent engineering calculation (documented hand/formula reference cases in tests).
++
++## Non-goals / anti-goals
++- No AC analysis, transient analysis, full circuit editor, or FET support.
++- No JavaScript-heavy UI, plotting, or persistence.
++
++## Constraints
++- Must be a real Flask web app runnable on localhost.
++- Keep implementation minimal and do not break existing DC-resistor lab files in this workspace.
++- Use Thevenin equivalent voltage-divider bias analysis.
++
++## Approaches considered
++1. **Separated logic + Flask UI + tests (chosen):** `bjt_bias.py` pure calculation/validation, `app.py` routes only, Jinja template + CSS, tests with known hand-calculated values. *Trade-off:* a few files, but testable and meets required separation.
++2. **Math in route/template:** smallest code count but untestable/mixed concerns and fails separation requirement. *Rejected.*
++3. **SPA/AJAX or plotting app:** better UX but unnecessary complexity for short lab. *Rejected.*
++
++## How (decided parts)
++- **Engineering logic (`bjt_bias.py`)**: `analyze_bjt_ce(VCC,R1,R2,RC,RE,beta,VBE)` returns values with units context: `VTH,V,RTH,ohm,IB,A,IC,A,IE,A,VB,V,VE,V,VC,V,VCE,V,region,warnings,errors/valid`.
++  - Formulas: `VTH = VCC*R2/(R1+R2)`, `RTH = R1*R2/(R1+R2)`, `IB = (VTH - VBE)/(RTH + (beta+1)*RE)`, `IC = beta*IB`, `IE = (beta+1)*IB`, `VB = VTH - IB*RTH`, `VE = IE*RE`, `VC = VCC - IC*RC`, `VCE = VC - VE`.
++  - Validation: numeric/finite, `VCC>0`, `R1,R2,RC,RE>0`, `beta>0`, `VBE>=0`, `R1+R2>0`.
++  - Region/warnings: cutoff if `IB <= 0` or emitter junction cannot turn on (`VTH <= VBE` effectively); saturation warning if `VCE <= 0.2 V` (`VCEsat` default 0.2 V); otherwise active/forward-active. Always report computed numbers and append warnings.
++- **Routes (`app.py`)**: `GET/POST /` renders form, parses/validates input presence, calls logic, displays results or input errors.
++- **UI (`templates/index.html`, `static/style.css`)**: single form, results table with units, validation/region warning banners.
++- **Tests (`tests/test_bjt_bias.py`)**: independent hand-calculated reference case(s) (stepwise expected values), validation errors, cutoff and saturation cases.
++
++## Left to the builder
++- Exact formatting/rounding in UI, minor copy/layout, and concrete reference numeric example values chosen to be easy to verify by hand (documented in test).
