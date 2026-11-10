@@ -64,11 +64,11 @@
         <!-- R2 and separate ground (bottom leg) -->
         <line class="wire" x1="100" y1="230" x2="100" y2="270"/>
         <rect class="res" x="85" y="270" width="30" height="60" rx="3"/><text class="l" x="122" y="305">R2 = {{ inputs['R2'] }} Ω</text>
-        <line class="wire" x1="100" y1="330" x2="100" y2="440"/>
-        <line class="wire" x1="78" y1="440" x2="122" y2="440"/>
-        <line class="wire" x1="86" y1="448" x2="114" y2="448"/>
-        <line class="wire" x1="94" y1="456" x2="106" y2="456"/>
-        <text class="sm" x="125" y="453">กราวด์ (GND, 0 V)</text>
+        <line class="wire" x1="100" y1="330" x2="100" y2="430"/>
+        <line class="wire" x1="72" y1="430" x2="128" y2="430" style="stroke:#102a43;stroke-width:2.5"/>
+        <line class="wire" x1="82" y1="440" x2="118" y2="440" style="stroke:#102a43;stroke-width:2.5"/>
+        <line class="wire" x1="92" y1="450" x2="108" y2="450" style="stroke:#102a43;stroke-width:2.5"/>
+        <text class="sm" x="132" y="445" style="font-weight:600;fill:#102a43">กราวด์ (GND, 0 V)</text>
 
         <!-- Base to transistor -->
         <line class="wire" x1="100" y1="230" x2="200" y2="230"/>
@@ -99,11 +99,11 @@
         <line class="wire" x1="260" y1="300" x2="260" y2="315" marker-end="url(#arr)"/>
         <text class="sm" x="268" y="322">IE {{ fmt(result.IE,'A') if has else '' }}</text>
         <rect class="res" x="245" y="340" width="30" height="45" rx="3"/><text class="l" x="282" y="367">RE = {{ inputs['RE'] }} Ω</text>
-        <line class="wire" x1="260" y1="385" x2="260" y2="440"/>
-        <line class="wire" x1="238" y1="440" x2="282" y2="440"/>
-        <line class="wire" x1="246" y1="448" x2="274" y2="448"/>
-        <line class="wire" x1="254" y1="456" x2="266" y2="456"/>
-        <text class="sm" x="285" y="453">กราวด์ (GND, 0 V)</text>
+        <line class="wire" x1="260" y1="385" x2="260" y2="470"/>
+        <line class="wire" x1="232" y1="470" x2="288" y2="470" style="stroke:#102a43;stroke-width:2.5"/>
+        <line class="wire" x1="242" y1="480" x2="278" y2="480" style="stroke:#102a43;stroke-width:2.5"/>
+        <line class="wire" x1="252" y1="490" x2="268" y2="490" style="stroke:#102a43;stroke-width:2.5"/>
+        <text class="sm" x="292" y="485" style="font-weight:600;fill:#102a43">กราวด์ (GND, 0 V)</text>
 
         <!-- VBE, VCE polarity marks -->
         <text class="sm" x="170" y="255">+</text><text class="sm" x="170" y="275">VBE={{ inputs['VBE'] }} V</text><text class="sm" x="235" y="275">−</text>
