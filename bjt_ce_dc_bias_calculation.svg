@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <style>
+      .bg{fill:#fbfcfe}
+      .title{font:700 28px Arial, Helvetica, sans-serif; fill:#102a43}
+      .subtitle{font:600 18px Arial, Helvetica, sans-serif; fill:#243b53}
+      .label{font:16px Arial, Helvetica, sans-serif; fill:#102a43}
+      .small{font:14px Arial, Helvetica, sans-serif; fill:#334e68}
+      .mono{font:15px "Consolas","Courier New",monospace; fill:#102a43}
+      .box{fill:#ffffff; stroke:#bcccdc; stroke-width:1.5}
+      .wire{stroke:#102a43; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round}
+      .res{stroke:#102a43; stroke-width:2.2; fill:#fff}
+      .accent{fill:#e6f6ff; stroke:#7cc4fa; stroke-width:1.5}
+      .warn{fill:#fff7e6; stroke:#f0b429; stroke-width:1.5}
+      .ok{fill:#e3f9e5; stroke:#57ae5b; stroke-width:1.5}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#102a43"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1200" height="720"/>
+  <text class="title" x="40" y="46">ภาพประกอบการคำนวณ BJT Common-Emitter (Voltage-Divider Bias, DC)</text>
+  <text class="small" x="40" y="72">อินพุต: VCC, R1, R2, RC, RE, β, VBE  |  เอาต์พุต: VTH, RTH, IB, IC, IE, VB, VE, VC, VCE และภาวะการทำงาน</text>
+
+  <!-- Circuit panel -->
+  <rect class="box" x="30" y="95" width="520" height="595" rx="10"/>
+  <text class="subtitle" x="55" y="128">1) วงจรไบแอสแบบแบ่งแรงดัน</text>
+
+  <!-- Wires and elements -->
+  <!-- VCC rail -->
+  <line class="wire" x1="120" y1="170" x2="430" y2="170"/>
+  <text class="label" x="255" y="158">VCC</text>
+  <circle cx="120" cy="170" r="4" fill="#102a43"/>
+  <circle cx="430" cy="170" r="4" fill="#102a43"/>
+
+  <!-- Left divider branch R1 down to base node -->
+  <line class="wire" x1="120" y1="170" x2="120" y2="210"/>
+  <rect class="res" x="105" y="210" width="30" height="80" rx="4"/>
+  <text class="label" x="145" y="255">R1</text>
+  <line class="wire" x1="120" y1="290" x2="120" y2="350"/>
+  <circle cx="120" cy="350" r="4" fill="#102a43"/>
+  <text class="label" x="55" y="345">ฐาน B</text>
+
+  <!-- R2 down to ground -->
+  <line class="wire" x1="120" y1="350" x2="120" y2="390"/>
+  <rect class="res" x="105" y="390" width="30" height="80" rx="4"/>
+  <text class="label" x="145" y="435">R2</text>
+  <line class="wire" x1="120" y1="470" x2="120" y2="610"/>
+
+  <!-- Base to transistor -->
+  <line class="wire" x1="120" y1="350" x2="240" y2="350"/>
+
+  <!-- Transistor (NPN symbol simplified) -->
+  <line class="wire" x1="250" y1="320" x2="250" y2="380"/>
+  <line class="wire" x1="250" y1="350" x2="240" y2="350"/>
+  <line class="wire" x1="250" y1="330" x2="300" y2="300"/>
+  <line class="wire" x1="250" y1="370" x2="300" y2="400"/>
+  <polygon points="292,390 300,400 286,400" fill="#102a43"/>
+  <circle cx="275" cy="350" r="36" class="wire"/>
+  <text class="label" x="318" y="355">NPN (β)</text>
+  <text class="small" x="215" y="372">IB</text>
+  <text class="small" x="305" y="295">IC</text>
+  <text class="small" x="305" y="418">IE</text>
+
+  <!-- Collector branch RC to VCC -->
+  <line class="wire" x1="300" y1="300" x2="300" y2="250"/>
+  <rect class="res" x="285" y="210" width="30" height="40" rx="4"/>
+  <text class="label" x="322" y="235">RC</text>
+  <line class="wire" x1="300" y1="210" x2="300" y2="170"/>
+  <text class="label" x="320" y="300">C (VC)</text>
+
+  <!-- Emitter branch RE to ground -->
+  <line class="wire" x1="300" y1="400" x2="300" y2="450"/>
+  <rect class="res" x="285" y="450" width="30" height="60" rx="4"/>
+  <text class="label" x="322" y="485">RE</text>
+  <line class="wire" x1="300" y1="510" x2="300" y2="610"/>
+  <text class="label" x="320" y="412">E (VE)</text>
+
+  <!-- Ground rail -->
+  <line class="wire" x1="80" y1="610" x2="470" y2="610"/>
+  <line class="wire" x1="110" y1="620" x2="440" y2="620"/>
+  <line class="wire" x1="150" y1="630" x2="400" y2="630"/>
+  <text class="label" x="250" y="655">GND (0 V)</text>
+
+  <!-- Voltage markers -->
+  <text class="mono" x="360" y="205">VC = VCC − IC·RC</text>
+  <text class="mono" x="360" y="545">VE = IE·RE</text>
+  <text class="mono" x="55" y="500">VTH, RTH</text>
+  <text class="mono" x="330" y="330">VBE</text>
+  <text class="mono" x="360" y="380">VCE = VC − VE</text>
+
+  <!-- Steps panel -->
+  <rect class="box" x="570" y="95" width="600" height="595" rx="10"/>
+  <text class="subtitle" x="595" y="128">2) ขั้นตอนการคำนวณ (DC Operating Point)</text>
+
+  <rect class="accent" x="595" y="150" width="550" height="120" rx="8"/>
+  <text class="subtitle" x="615" y="178">ขั้นที่ A: เทียบเท่า Thevenin ที่ฐาน</text>
+  <text class="mono" x="615" y="208">VTH = VCC · R2 / (R1 + R2)</text>
+  <text class="mono" x="615" y="236">RTH = (R1 · R2) / (R1 + R2)</text>
+  <text class="small" x="615" y="258">ใช้ลดวงจรแบ่งแรงดันด้านซ้ายให้ง่ายต่อการคำนวณกระแสฐาน</text>
+
+  <rect class="accent" x="595" y="285" width="550" height="150" rx="8"/>
+  <text class="subtitle" x="615" y="313">ขั้นที่ B: กระแสและแรงดันโหนด</text>
+  <text class="mono" x="615" y="343">IB = (VTH − VBE) / (RTH + (β + 1)·RE)</text>
+  <text class="mono" x="615" y="371">IC = β · IB</text>
+  <text class="mono" x="615" y="399">IE = (β + 1) · IB  ≈ IC + IB</text>
+  <text class="mono" x="615" y="427">VB = VTH − IB·RTH,   VE = IE·RE,   VC = VCC − IC·RC</text>
+
+  <rect class="accent" x="595" y="450" width="550" height="70" rx="8"/>
+  <text class="subtitle" x="615" y="478">ขั้นที่ C: แรงดัน C-E</text>
+  <text class="mono" x="615" y="506">VCE = VC − VE</text>
+
+  <text class="subtitle" x="595" y="548">3) การตัดสินภาวะ (Region) และคำเตือน</text>
+  <rect class="warn" x="595" y="560" width="265" height="52" rx="8"/>
+  <text class="label" x="610" y="583">Cutoff</text>
+  <text class="small" x="610" y="603">VTH ≤ VBE หรือ IB ≤ 0 → เตือนตัดตัว</text>
+
+  <rect class="warn" x="880" y="560" width="265" height="52" rx="8"/>
+  <text class="label" x="895" y="583">Saturation</text>
+  <text class="small" x="895" y="603">VCE ≤ VCEsat (0.2 V) → เตือนอิ่มตัว</text>
+
+  <rect class="ok" x="595" y="622" width="550" height="52" rx="8"/>
+  <text class="label" x="610" y="645">Active (Forward-Active)</text>
+  <text class="small" x="610" y="665">อยู่ระหว่าง cutoff และ saturation → ใช้ค่าสมการข้างต้นเป็นจุดทำงาน DC</text>
+
+  <text class="small" x="40" y="705">หมายเหตุ: แอปตรวจสอบอินพุต (ค่าต้องเป็นจำนวนจริง, R&gt;0, β&gt;0, VCC&gt;0, VBE≥0) และแสดงผลพร้อมหน่วย V, Ω, A</text>
+</svg>

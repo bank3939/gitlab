@@ -22,6 +22,12 @@
       <div class="actions"><button type="submit">Compute</button></div>
     </form>
 
+    <section class="panel illustration">
+      <h2>ภาพประกอบการคำนวณ (DC Operating Point)</h2>
+      <p class="muted">วงจร CE แบบแบ่งแรงดัน, สมการ Thevenin และเงื่อนไขตัดสินภาวะ (Active / Cutoff / Saturation, VCEsat = 0.2 V)</p>
+      <img src="{{ url_for('static', filename='bjt_ce_dc_bias_calculation.svg') }}" alt="ภาพประกอบการคำนวณ BJT Common-Emitter DC Bias" class="calc-illustration">
+    </section>
+
     {% if parse_errors %}
     <section class="panel error">
       <h2>Input Errors</h2>
