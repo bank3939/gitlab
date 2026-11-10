@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT CE DC Bias Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <h1>BJT Common-Emitter DC Bias Calculator</h1>
+    <p class="subtitle">Enter circuit parameters to compute the DC operating point.</p>
+
+    <form method="post" class="form-grid">
+      <label>VCC (V)<input type="text" name="VCC" value="{{ inputs['VCC'] }}" required></label>
+      <label>R1 (Ω)<input type="text" name="R1" value="{{ inputs['R1'] }}" required></label>
+      <label>R2 (Ω)<input type="text" name="R2" value="{{ inputs['R2'] }}" required></label>
+      <label>RC (Ω)<input type="text" name="RC" value="{{ inputs['RC'] }}" required></label>
+      <label>RE (Ω)<input type="text" name="RE" value="{{ inputs['RE'] }}" required></label>
+      <label>beta<input type="text" name="beta" value="{{ inputs['beta'] }}" required></label>
+      <label>VBE (V)<input type="text" name="VBE" value="{{ inputs['VBE'] }}" required></label>
+      <div class="actions"><button type="submit">Compute</button></div>
+    </form>
+
+    {% if parse_errors %}
+    <section class="panel error">
+      <h2>Input Errors</h2>
+      <ul>
+        {% for e in parse_errors %}<li>{{ e }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if result %}
+      {% if result.errors %}
+      <section class="panel error">
+        <h2>Validation Errors</h2>
+        <ul>
+          {% for e in result.errors %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if result.warnings %}
+      <section class="panel warning">
+        <h2>Warnings</h2>
+        <ul>
+          {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      <section class="panel">
+        <h2>DC Operating Point</h2>
+        <p><strong>Region:</strong> {{ result.region }}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>VTH (V)</th><th>RTH (Ω)</th><th>IB (A)</th><th>IC (A)</th><th>IE (A)</th>
+              <th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ result.VTH if result.VTH is not none else '—' }}</td>
+              <td>{{ result.RTH if result.RTH is not none else '—' }}</td>
+              <td>{{ result.IB if result.IB is not none else '—' }}</td>
+              <td>{{ result.IC if result.IC is not none else '—' }}</td>
+              <td>{{ result.IE if result.IE is not none else '—' }}</td>
+              <td>{{ result.VB if result.VB is not none else '—' }}</td>
+              <td>{{ result.VE if result.VE is not none else '—' }}</td>
+              <td>{{ result.VC if result.VC is not none else '—' }}</td>
+              <td>{{ result.VCE if result.VCE is not none else '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
