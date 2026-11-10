@@ -110,14 +110,12 @@
         <text class="sm" x="305" y="210">VCE={{ fmt(result.VCE,'V') if has else '—' }}</text>
         <text class="sm" x="305" y="225">( + ที่ C, − ที่ E )</text>
 
-        <!-- Assumptions -->
-        <rect class="note" x="35" y="410" width="420" height="120" rx="6"/>
-        <text class="s" x="48" y="432">สมมติฐาน / เงื่อนไข (DC)</text>
-        <text class="sm" x="48" y="452">• NPN, วิเคราะห์ DC เท่านั้น (ไม่มีสัญญาณ AC)</text>
-        <text class="sm" x="48" y="470">• ใช้ VBE(on) = {{ inputs['VBE'] }} V (ตามอินพุต), β คงที่ = {{ inputs['beta'] }}</text>
-        <text class="sm" x="48" y="488">• VCE(sat) = 0.2 V, IE = (β+1)IB, IC = βIB</text>
-        <text class="sm" x="48" y="506">• กราวด์แยกกันเป็นจุดอ้างอิงเดียวกัน (0 V), ไม่คิด Early effect</text>
-        <text class="sm" x="48" y="524">• ภาวะตัดสินจาก VTH≤VBE (cutoff) หรือ VCE≤0.2 V (saturation)</text>
+        <!-- Assumptions (compact) -->
+        <rect class="note" x="35" y="452" width="420" height="78" rx="6"/>
+        <text class="s" x="46" y="468" style="font-size:13px">สมมติฐาน / เงื่อนไข (DC)</text>
+        <text x="46" y="482" style="font:10px Arial,sans-serif;fill:#334e68">• NPN, วิเคราะห์ DC เท่านั้น; VBE(on)={{ inputs['VBE'] }} V, β={{ inputs['beta'] }} คงที่</text>
+        <text x="46" y="496" style="font:10px Arial,sans-serif;fill:#334e68">• VCE(sat)=0.2 V, IC=βIB, IE=(β+1)IB, ไม่คิด Early effect, กราวด์อ้างอิง 0 V (แยกขา)</text>
+        <text x="46" y="510" style="font:10px Arial,sans-serif;fill:#334e68">• ภาวะ: VTH≤VBE หรือ IB≤0 → cutoff; VCE≤0.2 V → saturation; อื่น ๆ → active</text>
 
         <!-- Calculations -->
         <rect class="box" x="485" y="45" width="615" height="495" rx="8"/>
