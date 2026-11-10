@@ -41,11 +41,15 @@
   <circle cx="120" cy="350" r="4" fill="#102a43"/>
   <text class="label" x="55" y="345">ฐาน B</text>
 
-  <!-- R2 down to ground -->
+  <!-- R2 down to ground (separate) -->
   <line class="wire" x1="120" y1="350" x2="120" y2="390"/>
   <rect class="res" x="105" y="390" width="30" height="80" rx="4"/>
   <text class="label" x="145" y="435">R2</text>
-  <line class="wire" x1="120" y1="470" x2="120" y2="610"/>
+  <line class="wire" x1="120" y1="470" x2="120" y2="560"/>
+  <line class="wire" x1="95" y1="560" x2="145" y2="560"/>
+  <line class="wire" x1="105" y1="570" x2="135" y2="570"/>
+  <line class="wire" x1="115" y1="580" x2="125" y2="580"/>
+  <text class="label" x="150" y="575">GND</text>
 
   <!-- Base to transistor -->
   <line class="wire" x1="120" y1="350" x2="240" y2="350"/>
@@ -69,18 +73,16 @@
   <line class="wire" x1="300" y1="210" x2="300" y2="170"/>
   <text class="label" x="320" y="300">C (VC)</text>
 
-  <!-- Emitter branch RE to ground -->
+  <!-- Emitter branch RE to ground (separate) -->
   <line class="wire" x1="300" y1="400" x2="300" y2="450"/>
   <rect class="res" x="285" y="450" width="30" height="60" rx="4"/>
   <text class="label" x="322" y="485">RE</text>
-  <line class="wire" x1="300" y1="510" x2="300" y2="610"/>
+  <line class="wire" x1="300" y1="510" x2="300" y2="600"/>
+  <line class="wire" x1="275" y1="600" x2="325" y2="600"/>
+  <line class="wire" x1="285" y1="610" x2="315" y2="610"/>
+  <line class="wire" x1="295" y1="620" x2="305" y2="620"/>
+  <text class="label" x="330" y="615">GND</text>
   <text class="label" x="320" y="412">E (VE)</text>
-
-  <!-- Ground rail -->
-  <line class="wire" x1="80" y1="610" x2="470" y2="610"/>
-  <line class="wire" x1="110" y1="620" x2="440" y2="620"/>
-  <line class="wire" x1="150" y1="630" x2="400" y2="630"/>
-  <text class="label" x="250" y="655">GND (0 V)</text>
 
   <!-- Voltage markers -->
   <text class="mono" x="360" y="205">VC = VCC − IC·RC</text>
