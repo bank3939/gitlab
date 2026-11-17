@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980">
+  <defs>
+    <style>
+      .bg{fill:#fbfcfe}
+      .title{font:700 28px Arial,sans-serif;fill:#102a43}
+      .sub{font:600 18px Arial,sans-serif;fill:#243b53}
+      .sec{font:700 17px Arial,sans-serif;fill:#103658}
+      .label{font:14px Arial,sans-serif;fill:#102a43}
+      .small{font:13px Arial,sans-serif;fill:#334e68}
+      .mono{font:13px Consolas,monospace;fill:#102a43}
+      .box{fill:#fff;stroke:#bcccdc;stroke-width:1.4}
+      .panelA{fill:#e8f6f2;stroke:#7cc4b8}
+      .panelB{fill:#e6f6ff;stroke:#7cc4fa}
+      .panelC{fill:#fff7e6;stroke:#f0b429}
+      .ok{fill:#e3f9e5;stroke:#57ae5b}
+      .wire{stroke:#102a43;stroke-width:2;fill:none;stroke-linecap:round}
+      .res{stroke:#102a43;stroke-width:2;fill:#fff}
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#102a43"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1400" height="980"/>
+  <text class="title" x="30" y="42">ภาพประกอบการคำนวณ BJT DC Bias — 3 โหมด (Fixed, Emitter, Voltage Divider)</text>
+  <text class="small" x="30" y="68">ค่าร่วม (อ้างอิงอิสระ): VCC = 12 V, RC = 2.2 kΩ (2200 Ω), β = 100, VBE = 0.70 V | หน่วย: V, Ω, A (แสดง IC เป็น mA), VCE(sat)=0.2 V</text>
+
+  <!-- A2 Fixed -->
+  <rect class="box" x="20" y="90" width="440" height="820" rx="10"/>
+  <rect class="panelB" x="35" y="105" width="410" height="34" rx="6"/>
+  <text class="sec" x="50" y="128">โหมด 1: Fixed Bias (A2)</text>
+
+  <!-- Fixed circuit -->
+  <line class="wire" x1="90" y1="160" x2="350" y2="160"/><text class="label" x="190" y="152">VCC = 12 V</text>
+  <line class="wire" x1="350" y1="160" x2="350" y2="185"/>
+  <rect class="res" x="335" y="185" width="30" height="35" rx="3"/><text class="label" x="372" y="207">RC=2.2 kΩ</text>
+  <line class="wire" x1="350" y1="220" x2="350" y2="255"/>
+  <text class="small" x="358" y="245">IC→</text>
+  <line class="wire" x1="350" y1="255" x2="320" y2="285"/><line class="wire" x1="320" y1="285" x2="350" y2="315"/>
+  <line class="wire" x1="305" y1="275" x2="305" y2="325"/><line class="wire" x1="305" y1="300" x2="220" y2="300"/>
+  <polygon points="342,307 350,315 338,318" fill="#102a43"/>
+  <circle cx="325" cy="300" r="28" class="wire"/>
+  <text class="label" x="360" y="295">NPN β=100</text>
+  <line class="wire" x1="220" y1="300" x2="220" y2="220"/>
+  <rect class="res" x="205" y="185" width="30" height="35" rx="3"/><text class="label" x="140" y="207">RB=1 MΩ</text>
+  <line class="wire" x1="220" y1="185" x2="220" y2="160"/><line class="wire" x1="220" y1="160" x2="90" y2="160"/>
+  <line class="wire" x1="350" y1="315" x2="350" y2="360"/>
+  <line class="wire" x1="330" y1="360" x2="370" y2="360"/><line class="wire" x1="338" y1="368" x2="362" y2="368"/><line class="wire" x1="346" y1="376" x2="354" y2="376"/>
+  <text class="small" x="372" y="372">กราวด์ (E ตรงกราวด์)</text>
+
+  <rect class="panelB" x="35" y="395" width="410" height="210" rx="6"/>
+  <text class="sec" x="50" y="418">อินพุต / สมการ</text>
+  <text class="mono" x="50" y="442">VCC=12 V, RC=2200 Ω, β=100, VBE=0.70 V, RB=1,000,000 Ω</text>
+  <text class="mono" x="50" y="466">IB = (VCC−VBE)/RB = (11.3)/1,000,000 = 11.3 µA</text>
+  <text class="mono" x="50" y="490">IC = β·IB = 100·11.3 µA = 1.13 mA</text>
+  <text class="mono" x="50" y="514">IE = (β+1)·IB = 1.1413 mA</text>
+  <text class="mono" x="50" y="538">VE = 0 V, VB = VBE = 0.70 V</text>
+  <text class="mono" x="50" y="562">VC = VCC−IC·RC = 12−2.486 = 9.514 V</text>
+  <text class="mono" x="50" y="586">VCE = VC−VE = 9.514 V</text>
+
+  <rect class="ok" x="35" y="615" width="410" height="90" rx="6"/>
+  <text class="sec" x="50" y="638">ผลลัพธ์ (ค่าอ้างอิงอิสระ)</text>
+  <text class="mono" x="50" y="662">VB=0.70 V, VE=0 V, VC=9.514 V</text>
+  <text class="mono" x="50" y="684">VCE=9.514 V, IC=1.13 mA (IB=11.3 µA, IE=1.1413 mA)</text>
+  <text class="small" x="50" y="700">ภาวะ: Active (IB&gt;0, VCE&gt;0.2 V)</text>
+
+  <!-- A3 Emitter -->
+  <rect class="box" x="480" y="90" width="440" height="820" rx="10"/>
+  <rect class="panelC" x="495" y="105" width="410" height="34" rx="6"/>
+  <text class="sec" x="510" y="128">โหมด 2: Emitter Bias (A3, A4)</text>
+
+  <line class="wire" x1="550" y1="160" x2="810" y2="160"/><text class="label" x="650" y="152">VCC = 12 V</text>
+  <line class="wire" x1="810" y1="160" x2="810" y2="185"/>
+  <rect class="res" x="795" y="185" width="30" height="35" rx="3"/><text class="label" x="832" y="207">RC=2.2 kΩ</text>
+  <line class="wire" x1="810" y1="220" x2="810" y2="255"/>
+  <line class="wire" x1="810" y1="255" x2="780" y2="285"/><line class="wire" x1="780" y1="285" x2="810" y2="315"/>
+  <line class="wire" x1="765" y1="275" x2="765" y2="325"/><line class="wire" x1="765" y1="300" x2="680" y2="300"/>
+  <polygon points="802,307 810,315 798,318" fill="#102a43"/>
+  <circle cx="785" cy="300" r="28" class="wire"/>
+  <text class="label" x="820" y="295">NPN β=100</text>
+  <line class="wire" x1="680" y1="300" x2="680" y2="220"/>
+  <rect class="res" x="665" y="185" width="30" height="35" rx="3"/><text class="label" x="600" y="207">RB=1 MΩ</text>
+  <line class="wire" x1="680" y1="185" x2="680" y2="160"/><line class="wire" x1="680" y1="160" x2="550" y2="160"/>
+  <line class="wire" x1="810" y1="315" x2="810" y2="345"/>
+  <rect class="res" x="795" y="345" width="30" height="35" rx="3"/><text class="label" x="832" y="367">RE (A3:1kΩ, A4:2kΩ)</text>
+  <line class="wire" x1="810" y1="380" x2="810" y2="410"/>
+  <line class="wire" x1="790" y1="410" x2="830" y2="410"/><line class="wire" x1="798" y1="418" x2="822" y2="418"/><line class="wire" x1="806" y1="426" x2="814" y2="426"/>
+  <text class="small" x="835" y="422">กราวด์ (แยกขา)</text>
+
+  <rect class="panelC" x="495" y="445" width="410" height="250" rx="6"/>
+  <text class="sec" x="510" y="468">อินพุต / สมการ</text>
+  <text class="mono" x="510" y="492">VCC=12 V, RC=2200 Ω, β=100, VBE=0.70 V, RB=1,000,000 Ω</text>
+  <text class="mono" x="510" y="516">IB = (VCC−VBE)/(RB+(β+1)RE)</text>
+  <text class="mono" x="510" y="540">IC = β·IB, IE = (β+1)·IB</text>
+  <text class="mono" x="510" y="564">VE = IE·RE, VB = VE+VBE</text>
+  <text class="mono" x="510" y="588">VC = VCC−IC·RC, VCE = VC−VE</text>
+  <text class="small" x="510" y="614">A3: RE=1 kΩ → IB=10.2634 µA, IC=1.02634 mA, IE=1.03660 mA</text>
+  <text class="small" x="510" y="634">VE=1.03660 V, VB=1.73660 V, VC=9.74205 V, VCE=8.70545 V</text>
+  <text class="small" x="510" y="658">A4: RE=2 kΩ → IB=9.4010 µA, IC=0.94010 mA (ลดลง), IE=0.94950 mA</text>
+  <text class="small" x="510" y="678">VE=1.89900 V, VB=2.59900 V, VC=9.93178 V, VCE=8.03278 V</text>
+
+  <rect class="ok" x="495" y="705" width="410" height="110" rx="6"/>
+  <text class="sec" x="510" y="728">ผลลัพธ์ (ค่าอ้างอิงอิสระ)</text>
+  <text class="mono" x="510" y="752">A3: VB=1.73660 V, VE=1.03660 V, VC=9.74205 V</text>
+  <text class="mono" x="510" y="774">VCE=8.70545 V, IC=1.02634 mA</text>
+  <text class="mono" x="510" y="796">A4: VCE=8.03278 V, IC=0.94010 mA (RE↑ → IC↓ ถูกต้อง)</text>
+
+  <!-- Divider -->
+  <rect class="box" x="940" y="90" width="440" height="820" rx="10"/>
+  <rect class="panelA" x="955" y="105" width="410" height="34" rx="6"/>
+  <text class="sec" x="970" y="128">โหมด 3: Voltage Divider Bias (A1)</text>
+
+  <line class="wire" x1="1010" y1="160" x2="1270" y2="160"/><text class="label" x="1110" y="152">VCC = 12 V</text>
+  <line class="wire" x1="1270" y1="160" x2="1270" y2="185"/>
+  <rect class="res" x="1255" y="185" width="30" height="35" rx="3"/><text class="label" x="1292" y="207">RC=2.2 kΩ</text>
+  <line class="wire" x1="1270" y1="220" x2="1270" y2="255"/>
+  <line class="wire" x1="1270" y1="255" x2="1240" y2="285"/><line class="wire" x1="1240" y1="285" x2="1270" y2="315"/>
+  <line class="wire" x1="1225" y1="275" x2="1225" y2="325"/><line class="wire" x1="1225" y1="300" x2="1140" y2="300"/>
+  <polygon points="1262,307 1270,315 1258,318" fill="#102a43"/>
+  <circle cx="1245" cy="300" r="28" class="wire"/>
+  <text class="label" x="1280" y="295">NPN β=100</text>
+  <line class="wire" x1="1140" y1="300" x2="1140" y2="230"/>
+  <circle cx="1140" cy="230" r="3" fill="#102a43"/>
+  <line class="wire" x1="1140" y1="230" x2="1140" y2="185"/>
+  <rect class="res" x="1125" y="185" width="30" height="45" rx="3"/><text class="label" x="1055" y="212">R1=100 kΩ</text>
+  <line class="wire" x1="1140" y1="185" x2="1140" y2="160"/>
+  <line class="wire" x1="1140" y1="230" x2="1140" y2="270"/>
+  <rect class="res" x="1125" y="270" width="30" height="45" rx="3"/><text class="label" x="1058" y="297">R2=22 kΩ</text>
+  <line class="wire" x1="1140" y1="315" x2="1140" y2="410"/>
+  <line class="wire" x1="1120" y1="410" x2="1160" y2="410"/><line class="wire" x1="1128" y1="418" x2="1152" y2="418"/><line class="wire" x1="1136" y1="426" x2="1144" y2="426"/>
+  <text class="small" x="1165" y="422">กราวด์ (แยกขา)</text>
+  <line class="wire" x1="1270" y1="315" x2="1270" y2="345"/>
+  <rect class="res" x="1255" y="345" width="30" height="35" rx="3"/><text class="label" x="1292" y="367">RE=1 kΩ</text>
+  <line class="wire" x1="1270" y1="380" x2="1270" y2="410"/>
+  <line class="wire" x1="1250" y1="410" x2="1290" y2="410"/><line class="wire" x1="1258" y1="418" x2="1282" y2="418"/><line class="wire" x1="1266" y1="426" x2="1274" y2="426"/>
+  <text class="small" x="1295" y="422">กราวด์ (แยกขา)</text>
+
+  <rect class="panelA" x="955" y="445" width="410" height="250" rx="6"/>
+  <text class="sec" x="970" y="468">อินพุต / สมการ (Thevenin)</text>
+  <text class="mono" x="970" y="492">VCC=12 V, RC=2200 Ω, β=100, VBE=0.70 V</text>
+  <text class="mono" x="970" y="514">R1=100 kΩ, R2=22 kΩ, RE=1 kΩ</text>
+  <text class="mono" x="970" y="538">VTH=VCC·R2/(R1+R2)=2.16393 V</text>
+  <text class="mono" x="970" y="562">RTH=R1||R2=18.03279 kΩ</text>
+  <text class="mono" x="970" y="586">IB=(VTH−VBE)/(RTH+(β+1)RE)=12.2986 µA</text>
+  <text class="mono" x="970" y="610">IC=βIB=1.22986 mA, IE=(β+1)IB=1.24216 mA</text>
+  <text class="mono" x="970" y="634">VB=1.94216 V, VE=1.24216 V, VC=9.29431 V</text>
+  <text class="mono" x="970" y="658">VCE=VC−VE=8.05216 V</text>
+
+  <rect class="ok" x="955" y="705" width="410" height="110" rx="6"/>
+  <text class="sec" x="970" y="728">ผลลัพธ์ (ค่าอ้างอิงอิสระ) — เดิมคงไว้</text>
+  <text class="mono" x="970" y="752">VB=1.94216 V, VE=1.24216 V, VC=9.29431 V</text>
+  <text class="mono" x="970" y="774">VCE=8.05216 V, IC=1.22986 mA</text>
+  <text class="small" x="970" y="798">ตรงกับค่าก่อนปรับปรุง Lab 03 (Divider ไม่เสียจากการเปลี่ยนแปลง)</text>
+
+  <!-- bottom summary -->
+  <rect class="box" x="20" y="920" width="1360" height="50" rx="8"/>
+  <text class="small" x="35" y="942">สรุป: คำนวณทั้ง 3 โหมดถูกต้องตามสมการ DC, แสดงหน่วยชัดเจน (V, Ω, A/mA), มีค่าอ้างอิงอิสระ A1–A5, และ Voltage Divider (A1) ให้ผลเดิม 1.22986 mA / 8.05216 V หลังเพิ่ม Fixed/Emitter</text>
+  <text class="small" x="35" y="960">สมมติฐาน: NPN, VBE(on) ตามอินพุต (0.70 V), β คงที่, VCE(sat)=0.2 V, ไม่คิด Early effect, กราวด์อ้างอิง 0 V แยกขา</text>
+</svg>
