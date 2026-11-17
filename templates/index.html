@@ -84,6 +84,12 @@
       {# errors shown above; avoid stale-looking results #}
     {% endif %}
 
+    <section class="panel illustration">
+      <h2>ภาพประกอบการคำนวณทั้ง 3 โหมด (ค่าอ้างอิงอิสระ)</h2>
+      <p class="muted small">แสดง Fixed, Emitter, Voltage Divider พร้อมหน่วยและสมมติฐาน (Divider A1 คงผลเดิม)</p>
+      <img src="{{ url_for('static', filename='bjt_three_modes_calculation.svg') }}" alt="ภาพประกอบการคำนวณ BJT DC Bias ทั้ง 3 โหมด" class="calc-illustration">
+    </section>
+
     <section class="panel">
       <h2>ค่าอ้างอิง A1–A5 (คำนวณอิสระ)</h2>
       <p class="muted small">VCC=12 V, RC=2.2 kΩ, β=100, VBE=0.70 V (ป้อน RC=2200 Ω)</p>
