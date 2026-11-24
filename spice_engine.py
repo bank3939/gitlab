@@ -12,18 +12,24 @@ DEFAULT_MODEL = """* Generic NPN 2N3904-like model (for educational simulation)
 + CJC=3.638p VJC=0.75 MJC=0.3085 TF=301.2p XTF=2 VTF=4 ITF=0.4 TR=239.5n)"""
 
 COMMON_NGSPICE_PATHS = [
+    r"C:\Spice64\bin\ngspice_con.exe",
     r"C:\Spice64\bin\ngspice.exe",
+    r"C:\Program Files\Spice64\bin\ngspice_con.exe",
     r"C:\Program Files\Spice64\bin\ngspice.exe",
+    r"C:\Program Files\ngspice\bin\ngspice_con.exe",
     r"C:\Program Files\ngspice\bin\ngspice.exe",
+    r"C:\Program Files (x86)\Spice64\bin\ngspice_con.exe",
     r"C:\Program Files (x86)\Spice64\bin\ngspice.exe",
+    os.path.expandvars(r"%LOCALAPPDATA%\Programs\Spice64\bin\ngspice_con.exe"),
     os.path.expandvars(r"%LOCALAPPDATA%\Programs\Spice64\bin\ngspice.exe"),
 ]
 
 
 def find_ngspice():
-    exe = shutil.which("ngspice") or shutil.which("ngspice.exe")
-    if exe:
-        return exe
+    for name in ("ngspice_con", "ngspice_con.exe", "ngspice", "ngspice.exe"):
+        exe = shutil.which(name)
+        if exe:
+            return exe
     for p in COMMON_NGSPICE_PATHS:
         if p and Path(p).exists():
             return p
