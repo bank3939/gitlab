@@ -278,12 +278,24 @@ def run_ac(params):
                 break
         freq, gain_db, phase = [], [], []
         for r in rows:
-            # expected patterns: [idx,f,idx,g,idx,p] or [f,g,p] or [idx,f,g,p]
             vals = r
-            # wrdata commonly outputs: freq gain_db freq phase? Or index freq index gain_db index phase
-            # We'll handle common case: 6 values => f,g,f,p? Actually wrdata vec1 vec2 vec3 -> n1 v1 n2 v2 n3 v3
-            if len(vals) >= 6:
-                f = vals[1]; g = vals[3]; ph = vals[5]
+            # ngspice wrdata observed formats:
+            # 7 cols: f  f  0  f  gain_db  f  phase  (scale repeated per vector, extra col)
+            # 6 cols: scale v1 scale v2 scale v3
+            # 3 cols: f gain_db phase
+            if len(vals) == 7:
+                f, g, ph = vals[0], vals[4], vals[6]
+            elif len(vals) >= 6:
+                # Common: idx/f, v1, idx/f, v2, idx/f, v3
+                f, g, ph = vals[1], vals[3], vals[5]
+                # If first looks like index (0,1,2...) and second is frequency, prefer idx1/val1 pairs
+                if f <= 0 and vals[0] > 0:
+                    f = vals[0]
+            elif len(vals) == 4:
+                # f gain phase or idx f g p
+                f, g, ph = vals[0], vals[1], vals[2]
+                if f <= 0 and vals[1] > 0:
+                    f, g, ph = vals[1], vals[2], vals[3]
             elif len(vals) >= 3:
                 f, g, ph = vals[0], vals[1], vals[2]
             else:

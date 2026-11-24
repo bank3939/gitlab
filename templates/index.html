@@ -136,24 +136,112 @@
         {% endif %}
 
         {% if spice_result.analysis == 'ac' %}
-        <p class="muted small">แกน: Frequency (Hz, log), Gain magnitude (dB), Phase (deg)</p>
-        <canvas id="acChart" height="120"></canvas>
+        <p class="muted small"><strong>AC Analysis (.ac)</strong> — Bode Plot จาก ngspice จริง<br>
+        Reference: <code>Av(f) = V(vout) / V(vin)</code> &nbsp;|&nbsp; Magnitude = <code>20·log10(|Av|)</code> (dB) &nbsp;|&nbsp; Phase = <code>∠Av</code> (deg) &nbsp;|&nbsp; Frequency (Hz, log scale)</p>
+        <div class="bode-wrap">
+          <div class="bode-panel">
+            <div class="bode-title">Gain Magnitude — |V(vout)/V(vin)| (dB)</div>
+            <canvas id="acGainChart" height="110"></canvas>
+          </div>
+          <div class="bode-panel">
+            <div class="bode-title">Phase — ∠V(vout)/V(vin) (deg)</div>
+            <canvas id="acPhaseChart" height="110"></canvas>
+          </div>
+        </div>
         <script>
           (function(){
             const freq = {{ spice_result.frequency_hz | tojson }};
             const gain = {{ spice_result.gain_db | tojson }};
             const phase = {{ spice_result.phase_deg | tojson }};
-            new Chart(document.getElementById('acChart'), {
+            const gainData = freq.map((f,i)=>({x:f, y:gain[i]}));
+            const phaseData = freq.map((f,i)=>({x:f, y:phase[i]}));
+
+            const commonX = {
+              type: 'logarithmic',
+              title: {display:true, text:'Frequency (Hz)', font:{size:13, weight:'600'}},
+              ticks: {
+                callback: function(v) {
+                  const allowed = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000,10000000];
+                  if (allowed.includes(Number(v))) return Number(v).toLocaleString('en-US');
+                  return '';
+                },
+                maxRotation: 0
+              },
+              grid: {color:'rgba(148,163,184,0.25)'}
+            };
+
+            const commonOpts = {
+              responsive: true,
+              animation: false,
+              interaction: {mode:'nearest', axis:'x', intersect:false},
+              plugins: {
+                legend: {display:true, labels:{usePointStyle:true, boxWidth:8}},
+                tooltip: {
+                  callbacks: {
+                    title: (items) => 'f = ' + Number(items[0].parsed.x).toLocaleString('en-US') + ' Hz'
+                  }
+                }
+              }
+            };
+
+            new Chart(document.getElementById('acGainChart'), {
               type:'line',
-              data:{labels:freq, datasets:[
-                {label:'Gain (dB)', data:gain, borderColor:'#167e93', yAxisID:'y', pointRadius:0},
-                {label:'Phase (deg)', data:phase, borderColor:'#c77a35', yAxisID:'y1', pointRadius:0}
-              ]},
-              options:{responsive:true, interaction:{mode:'index',intersect:false}, scales:{
-                x:{type:'logarithmic', title:{display:true,text:'Frequency (Hz)'}},
-                y:{title:{display:true,text:'Gain (dB)'}},
-                y1:{position:'right', title:{display:true,text:'Phase (deg)'}, grid:{drawOnChartArea:false}}
-              }}
+              data:{datasets:[{
+                label:'|Av| (dB)',
+                data: gainData,
+                borderColor:'#0f766e',
+                backgroundColor:'rgba(15,118,110,0.08)',
+                borderWidth:2.2,
+                pointRadius:0,
+                pointHitRadius:8,
+                fill:true,
+                tension:0
+              }]},
+              options:{
+                ...commonOpts,
+                plugins:{
+                  ...commonOpts.plugins,
+                  tooltip:{callbacks:{title:(items)=>'f = '+Number(items[0].parsed.x).toLocaleString('en-US')+' Hz', label:(it)=>' Gain = '+it.parsed.y.toFixed(2)+' dB'}}
+                },
+                scales:{
+                  x: commonX,
+                  y: {
+                    title:{display:true, text:'Gain (dB)', font:{size:13, weight:'600'}},
+                    grid:{color:'rgba(148,163,184,0.25)'},
+                    ticks:{callback:(v)=>Number(v).toFixed(1)}
+                  }
+                }
+              }
+            });
+
+            new Chart(document.getElementById('acPhaseChart'), {
+              type:'line',
+              data:{datasets:[{
+                label:'Phase (deg)',
+                data: phaseData,
+                borderColor:'#c2410c',
+                backgroundColor:'rgba(194,65,12,0.06)',
+                borderWidth:2.2,
+                pointRadius:0,
+                pointHitRadius:8,
+                fill:false,
+                tension:0
+              }]},
+              options:{
+                ...commonOpts,
+                plugins:{
+                  ...commonOpts.plugins,
+                  tooltip:{callbacks:{title:(items)=>'f = '+Number(items[0].parsed.x).toLocaleString('en-US')+' Hz', label:(it)=>' Phase = '+it.parsed.y.toFixed(2)+' °'}}
+                },
+                scales:{
+                  x: commonX,
+                  y: {
+                    title:{display:true, text:'Phase (deg)', font:{size:13, weight:'600'}},
+                    grid:{color:'rgba(148,163,184,0.25)'},
+                    ticks:{callback:(v)=>Number(v).toFixed(0)}
+                  }
+                }
+              }
             });
           })();
         </script>
