@@ -19,15 +19,16 @@
 | Case | Method | Expected/Check | Observed (real browser + ngspice) | Status | Evidence |
 |---|---|---|---|---|---|
 | B1 Regression | Browser form | Lab 3 3 modes still work (A1-A5) | A1-A5 all match expected values/errors | PASS | browser run 2026-11-24 |
-| B2 DC SPICE | Browser + ngspice `.op` | VB/VE/VC/VCE/IC with ngspice provenance | VB=2.00367 V, VE=1.33288 V, VC=9.08722 V, VCE=7.75434 V, IC≈1.42396 mA, badge `ngspice .op (real simulation)` | PASS | browser run 2026-11-24 |
-| B3 Change RE | Browser + ngspice `.op` | changing RE changes OP | RE=1k: VCE=7.75434 V, IC=1.42396 mA; RE=2k: VCE=9.03153 V, IC=0.803643 mA (OP changed) | PASS | browser run 2026-11-24 |
-| B4 AC | Browser + ngspice `.ac` | Bode plot from real .ac, axes/units/reference clear | 201 points, Bode 2-panel: Gain Magnitude `|V(vout)/V(vin)| (dB)`, Phase `∠V(vout)/V(vin) (deg)`, Frequency Hz log; ref `Av(f)=V(vout)/V(vin)` shown | PASS | browser run 2026-11-24 |
-| B5 Transient | Browser + ngspice `.tran` | Vin/Vout vs time from real .tran | 2 datasets (Vin/Vout), 1008 points each, badge `ngspice .tran (real simulation)` | PASS | browser run 2026-11-24 |
-| B6 Change Source | Browser + ngspice `.tran` | waveform changes with amplitude/freq | amp/freq changed (10mV/1kHz → 50mV/2kHz), tran rerun produced real waveform result (1008 points) | PASS | browser run 2026-11-24 |
-| B7 Invalid/Fail | Browser/manual | invalid input or missing engine shows error, no fake success plot | R1=-1 => "R1 ต้องมากกว่า 0" error panel, no SPICE result/graph | PASS | browser run 2026-11-24 |
-| B8 UI responsive | Browser/manual | desktop/mobile readable, no critical cut-off | Desktop layout verified; mobile/narrow viewport screenshot not yet captured in this session | PARTIAL | needs mobile screenshot in `docs/evidence/` |
+| B2 DC SPICE | Browser + ngspice `.op` | VB/VE/VC/VCE/IC with ngspice provenance | VB=2.00367 V, VE=1.33288 V, VC=9.08722 V, VCE=7.75434 V, IC≈1.42396 mA, badge `ngspice .op (real simulation)` | PASS | `docs/evidence/B2_op.jpg` |
+| B3 Change RE | Browser + ngspice `.op` | changing RE changes OP | RE=1k: VCE=7.75434 V, IC=1.42396 mA; RE=2k: VCE=9.03153 V, IC=0.803643 mA (OP changed) | PASS | `docs/evidence/B3_op_RE2k.jpg` |
+| B4 AC | Browser + ngspice `.ac` | Bode plot from real .ac, axes/units/reference clear | 201 points, Bode 2-panel: Gain Magnitude `|V(vout)/V(vin)| (dB)`, Phase `∠V(vout)/V(vin) (deg)`, Frequency Hz log; ref `Av(f)=V(vout)/V(vin)` shown | PASS | `docs/evidence/B4_ac_bode.jpg` |
+| B5 Transient | Browser + ngspice `.tran` | Vin/Vout vs time from real .tran | 2 datasets (Vin/Vout), 1008 points each, badge `ngspice .tran (real simulation)` | PASS | `docs/evidence/B5_tran.jpg` |
+| B6 Change Source | Browser + ngspice `.tran` | waveform changes with amplitude/freq | amp/freq changed (10mV/1kHz → 50mV/2kHz), tran rerun produced real waveform result (1008 points) | PASS | `docs/evidence/B6_tran_changed.jpg` |
+| B7 Invalid/Fail | Browser/manual | invalid input or missing engine shows error, no fake success plot | R1=-1 => "R1 ต้องมากกว่า 0" error panel, no SPICE result/graph | PASS | `docs/evidence/B7_error.jpg` |
+| B8 UI responsive | Browser/manual | desktop/mobile readable, no critical cut-off | Desktop full-page captured; narrow-width (390px) simulated capture added (not true device emulation) | PASS* | `docs/evidence/B8_desktop.jpg`, `docs/evidence/B8_mobile_simulated.jpg` |
 
 ## Notes
 - SPICE results are labeled as `ngspice .op/.ac/.tran (real simulation)` and kept separate from analytical DC bias.
-- AC parser bug (wrdata 7-column mapping) was fixed; Bode plot now uses correct gain/phase data.
-- For full submission evidence, capture and store browser screenshots/logs in `docs/evidence/` (B2 op, B3 RE compare, B4 bode, B5 tran, B6 changed source, B7 error, B8 desktop+mobile).
+- AC parser bug (wrdata 7-column mapping) was fixed; Bode plot now uses correct gain/phase data and clear reference/units.
+- Browser evidence screenshots saved in `docs/evidence/`: B2–B7, B8 desktop, B8 mobile simulated. See `docs/evidence/UI_before_after.md` for Impeccable before/after notes.
+- `B8 PASS*`: narrow-width simulated via CSS (390px), not true mobile device/browser emulation.
