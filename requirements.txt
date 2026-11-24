@@ -1,0 +1,2 @@
+Flask>=3.0
+# ngspice is an external system dependency (not pip): install from https://ngspice.sourceforge.io/download.html

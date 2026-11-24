@@ -3,69 +3,61 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lab 03 BJT DC Bias Calculator</title>
+  <title>Lab 04 BJT CE Amplifier Simulator v1</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <main class="container">
-    <h1>Lab 03 — BJT DC Bias (3 โหมด)</h1>
-    <p class="subtitle">เลือกวงจร กรอกค่าตามโหมด (หน่วย: V, Ω) แล้วคำนวณ DC Operating Point</p>
+    <h1>Lab 04 — BJT CE Amplifier Simulator v1</h1>
+    <p class="subtitle">Lab 3 DC Bias (3 โหมด) + Lab 4 ngspice Simulation (CE Voltage Divider: .op / .ac / .tran)</p>
 
-    <form method="post" class="panel" id="bias-form">
-      <div class="form-grid">
-        <label>โหมดวงจร
-          <select name="mode" id="mode">
-            {% for key,label in modes.items() %}
-            <option value="{{ key }}" {% if mode==key %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>VCC (V)<input type="text" name="VCC" value="{{ inputs.get('VCC','') }}"></label>
-        <label>RC (Ω)<input type="text" name="RC" value="{{ inputs.get('RC','') }}"></label>
-        <label>β<input type="text" name="beta" value="{{ inputs.get('beta','') }}"></label>
-        <label>VBE (V)<input type="text" name="VBE" value="{{ inputs.get('VBE','') }}"></label>
+    <!-- LAB 3 -->
+    <section class="panel">
+      <h2>ส่วนที่ 1: DC Bias Analytical (Lab 3 เดิม — คงไว้ทั้ง 3 โหมด)</h2>
+      <form method="post" class="panel inner" id="bias-form">
+        <input type="hidden" name="form_type" value="dc">
+        <div class="form-grid">
+          <label>โหมดวงจร
+            <select name="mode" id="mode">
+              {% for key,label in modes.items() %}
+              <option value="{{ key }}" {% if mode==key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>VCC (V)<input type="text" name="VCC" value="{{ inputs.get('VCC','') }}"></label>
+          <label>RC (Ω)<input type="text" name="RC" value="{{ inputs.get('RC','') }}"></label>
+          <label>β<input type="text" name="beta" value="{{ inputs.get('beta','') }}"></label>
+          <label>VBE (V)<input type="text" name="VBE" value="{{ inputs.get('VBE','') }}"></label>
+          <label data-modes="divider">R1 (Ω)<input type="text" name="R1" value="{{ inputs.get('R1','') }}"></label>
+          <label data-modes="divider">R2 (Ω)<input type="text" name="R2" value="{{ inputs.get('R2','') }}"></label>
+          <label data-modes="divider emitter">RE (Ω)<input type="text" name="RE" value="{{ inputs.get('RE','') }}"></label>
+          <label data-modes="fixed emitter">RB (Ω)<input type="text" name="RB" value="{{ inputs.get('RB','') }}"></label>
+          <div class="actions"><button type="submit">คำนวณ DC Bias</button></div>
+        </div>
+        <p class="muted small">ช่องที่ไม่เกี่ยวข้องกับโหมดที่เลือกจะถูกปิดใช้งาน</p>
+      </form>
 
-        <label data-modes="divider">R1 (Ω)<input type="text" name="R1" value="{{ inputs.get('R1','') }}"></label>
-        <label data-modes="divider">R2 (Ω)<input type="text" name="R2" value="{{ inputs.get('R2','') }}"></label>
-        <label data-modes="divider emitter">RE (Ω)<input type="text" name="RE" value="{{ inputs.get('RE','') }}"></label>
-        <label data-modes="fixed emitter">RB (Ω)<input type="text" name="RB" value="{{ inputs.get('RB','') }}"></label>
-
-        <div class="actions"><button type="submit">คำนวณ</button></div>
-      </div>
-      <p class="muted small">ช่องที่ไม่เกี่ยวข้องกับโหมดที่เลือกจะถูกปิดใช้งาน (คำนวณใช้เฉพาะค่าที่จำเป็น)</p>
-    </form>
-
-    {% if errors %}
-    <section class="panel error">
-      <h2>ข้อผิดพลาด (โหมด: {{ modes.get(mode, mode) }})</h2>
-      <ul>
-        {% for e in errors %}<li>{{ e }}</li>{% endfor %}
-      </ul>
-    </section>
-    {% endif %}
-
-    {% if result and not errors %}
-      {% if result.warnings %}
-      <section class="panel warning">
-        <h2>คำเตือน (โหมด: {{ modes.get(result.mode, result.mode) }})</h2>
-        <ul>
-          {% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}
-        </ul>
+      {% if errors %}
+      <section class="panel error">
+        <h2>ข้อผิดพลาด (โหมด: {{ modes.get(mode, mode) }})</h2>
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
       </section>
       {% endif %}
 
-      <section class="panel">
-        <h2>ผลลัพธ์ DC Operating Point</h2>
-        <p><strong>โหมดที่เลือก:</strong> {{ modes.get(result.mode, result.mode) }}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th><th>IC (mA)</th>
-              <th>IB (A)</th><th>IE (A)</th><th>VTH (V)</th><th>RTH (Ω)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
+      {% if result and not errors %}
+        {% if result.warnings %}
+        <section class="panel warning">
+          <h2>คำเตือน (โหมด: {{ modes.get(result.mode, result.mode) }})</h2>
+          <ul>{% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+        </section>
+        {% endif %}
+        <section class="panel">
+          <h2>ผลลัพธ์ DC Operating Point</h2>
+          <p><strong>โหมดที่เลือก:</strong> {{ modes.get(result.mode, result.mode) }} <span class="badge">Analytical (Python)</span></p>
+          <table>
+            <thead><tr><th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th><th>IC (mA)</th><th>IB (A)</th><th>IE (A)</th><th>VTH (V)</th><th>RTH (Ω)</th></tr></thead>
+            <tbody><tr>
               <td>{{ "%.6g"|format(result.vb_v) if result.vb_v is not none else '—' }}</td>
               <td>{{ "%.6g"|format(result.ve_v) if result.ve_v is not none else '—' }}</td>
               <td>{{ "%.6g"|format(result.vc_v) if result.vc_v is not none else '—' }}</td>
@@ -75,23 +67,133 @@
               <td>{{ "%.6g"|format(result.ie_a) if result.ie_a is not none else '—' }}</td>
               <td>{{ "%.6g"|format(result.vth_v) if result.vth_v is not none else '—' }}</td>
               <td>{{ "%.6g"|format(result.rth_ohm) if result.rth_ohm is not none else '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="muted small">สมมติฐาน DC: VCE(sat)=0.2 V, ใช้แบบจำลอง Forward Active เป็นหลัก; หาก IB ≤ 0 หรือ VCE ≤ 0.2 V จะแสดงคำเตือน</p>
-      </section>
-    {% elif result and errors %}
-      {# errors shown above; avoid stale-looking results #}
-    {% endif %}
+            </tr></tbody>
+          </table>
+        </section>
+      {% endif %}
+    </section>
 
-    <section class="panel illustration">
-      <h2>ภาพประกอบการคำนวณทั้ง 3 โหมด (ค่าอ้างอิงอิสระ)</h2>
-      <p class="muted small">แสดง Fixed, Emitter, Voltage Divider พร้อมหน่วยและสมมติฐาน (Divider A1 คงผลเดิม)</p>
-      <img src="{{ url_for('static', filename='bjt_three_modes_calculation.svg') }}" alt="ภาพประกอบการคำนวณ BJT DC Bias ทั้ง 3 โหมด" class="calc-illustration">
+    <!-- LAB 4 SPICE -->
+    <section class="panel">
+      <h2>ส่วนที่ 2: CE Voltage Divider — ngspice Simulation (Lab 4)</h2>
+      <p class="muted">วงจรอ้างอิง: CE Voltage Divider + Cin/Cout/RL, ไม่มี Cbypass (baseline v1). ผลที่ได้มาจาก <strong>ngspice จริง</strong> เมื่อ engine พร้อม</p>
+      <p><strong>Engine status:</strong>
+        {% if ngspice_info.version %}
+          <span class="badge ok">พร้อมใช้งาน</span> {{ ngspice_info.version }}
+        {% else %}
+          <span class="badge err">ไม่พร้อมใช้งาน</span> {{ ngspice_info.error }}
+        {% endif %}
+      </p>
+
+      <form method="post" class="panel inner">
+        <input type="hidden" name="form_type" value="spice">
+        <div class="form-grid">
+          <label>Analysis
+            <select name="spice_analysis">
+              <option value="op" {% if spice.spice_analysis=='op' %}selected{% endif %}>DC (.op)</option>
+              <option value="ac" {% if spice.spice_analysis=='ac' %}selected{% endif %}>AC (.ac)</option>
+              <option value="tran" {% if spice.spice_analysis=='tran' %}selected{% endif %}>Transient (.tran)</option>
+            </select>
+          </label>
+          <label>VCC (V)<input type="text" name="spice_VCC" value="{{ spice.spice_VCC }}"></label>
+          <label>R1 (Ω)<input type="text" name="spice_R1" value="{{ spice.spice_R1 }}"></label>
+          <label>R2 (Ω)<input type="text" name="spice_R2" value="{{ spice.spice_R2 }}"></label>
+          <label>RC (Ω)<input type="text" name="spice_RC" value="{{ spice.spice_RC }}"></label>
+          <label>RE (Ω)<input type="text" name="spice_RE" value="{{ spice.spice_RE }}"></label>
+          <label>RL (Ω)<input type="text" name="spice_RL" value="{{ spice.spice_RL }}"></label>
+          <label>Cin (µF)<input type="text" name="spice_Cin_uF" value="{{ spice.spice_Cin_uF }}"></label>
+          <label>Cout (µF)<input type="text" name="spice_Cout_uF" value="{{ spice.spice_Cout_uF }}"></label>
+          <label>Amplitude (mV, peak)<input type="text" name="spice_amp_mV" value="{{ spice.spice_amp_mV }}"></label>
+          <label>Frequency (Hz)<input type="text" name="spice_freq_hz" value="{{ spice.spice_freq_hz }}"></label>
+          <div class="actions"><button type="submit">Run SPICE</button></div>
+        </div>
+      </form>
+
+      {% if spice_errors %}
+      <section class="panel error">
+        <h2>SPICE Error / Validation</h2>
+        <ul>{% for e in spice_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      </section>
+      {% endif %}
+
+      {% if spice_result and spice_result.ok %}
+      <section class="panel">
+        <h2>SPICE Result <span class="badge ok">{{ spice_result.provenance }}</span></h2>
+        <p class="muted small">Engine: {{ spice_result.engine or 'n/a' }} | Model: {{ spice_result.model }} | Analysis: {{ spice_result.analysis }}</p>
+
+        {% if spice_result.analysis == 'op' %}
+        <table>
+          <thead><tr><th>VB (V)</th><th>VE (V)</th><th>VC (V)</th><th>VCE (V)</th><th>IC approx (mA)</th></tr></thead>
+          <tbody><tr>
+            <td>{{ "%.6g"|format(spice_result.vb_v) if spice_result.vb_v is not none else '—' }}</td>
+            <td>{{ "%.6g"|format(spice_result.ve_v) if spice_result.ve_v is not none else '—' }}</td>
+            <td>{{ "%.6g"|format(spice_result.vc_v) if spice_result.vc_v is not none else '—' }}</td>
+            <td>{{ "%.6g"|format(spice_result.vce_v) if spice_result.vce_v is not none else '—' }}</td>
+            <td>{{ "%.6g"|format(spice_result.ic_ma) if spice_result.ic_ma is not none else '—' }}</td>
+          </tr></tbody>
+        </table>
+        <p class="muted small">หมายเหตุ: ค่า SPICE ขึ้นกับโมเดลทรานซิสเตอร์และสภาวะจำลอง อาจต่างจากค่า analytical แบบประมาณใน Lab 3</p>
+        {% endif %}
+
+        {% if spice_result.analysis == 'ac' %}
+        <p class="muted small">แกน: Frequency (Hz, log), Gain magnitude (dB), Phase (deg)</p>
+        <canvas id="acChart" height="120"></canvas>
+        <script>
+          (function(){
+            const freq = {{ spice_result.frequency_hz | tojson }};
+            const gain = {{ spice_result.gain_db | tojson }};
+            const phase = {{ spice_result.phase_deg | tojson }};
+            new Chart(document.getElementById('acChart'), {
+              type:'line',
+              data:{labels:freq, datasets:[
+                {label:'Gain (dB)', data:gain, borderColor:'#167e93', yAxisID:'y', pointRadius:0},
+                {label:'Phase (deg)', data:phase, borderColor:'#c77a35', yAxisID:'y1', pointRadius:0}
+              ]},
+              options:{responsive:true, interaction:{mode:'index',intersect:false}, scales:{
+                x:{type:'logarithmic', title:{display:true,text:'Frequency (Hz)'}},
+                y:{title:{display:true,text:'Gain (dB)'}},
+                y1:{position:'right', title:{display:true,text:'Phase (deg)'}, grid:{drawOnChartArea:false}}
+              }}
+            });
+          })();
+        </script>
+        {% endif %}
+
+        {% if spice_result.analysis == 'tran' %}
+        <p class="muted small">แกน: Time (s), Voltage (V) — Vin (teal), Vout (orange)</p>
+        <canvas id="tranChart" height="120"></canvas>
+        <script>
+          (function(){
+            const t = {{ spice_result.time_s | tojson }};
+            const vin = {{ spice_result.vin_v | tojson }};
+            const vout = {{ spice_result.vout_v | tojson }};
+            new Chart(document.getElementById('tranChart'), {
+              type:'line',
+              data:{labels:t, datasets:[
+                {label:'Vin (V)', data:vin, borderColor:'#0c8e83', pointRadius:0},
+                {label:'Vout (V)', data:vout, borderColor:'#c77a35', pointRadius:0}
+              ]},
+              options:{responsive:true, interaction:{mode:'index',intersect:false}, scales:{
+                x:{title:{display:true,text:'Time (s)'}},
+                y:{title:{display:true,text:'Voltage (V)'}}
+              }}
+            });
+          })();
+        </script>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {% if spice_result and (not spice_result.ok) and not spice_errors %}
+      <section class="panel error">
+        <h2>SPICE Run Failed</h2>
+        <p>{{ spice_result.error }}</p>
+      </section>
+      {% endif %}
     </section>
 
     <section class="panel">
-      <h2>ค่าอ้างอิง A1–A5 (คำนวณอิสระ)</h2>
+      <h2>ค่าอ้างอิง A1–A5 (Lab 3, คำนวณอิสระ)</h2>
       <p class="muted small">VCC=12 V, RC=2.2 kΩ, β=100, VBE=0.70 V (ป้อน RC=2200 Ω)</p>
       <table>
         <thead><tr><th>กรณี</th><th>โหมด/อินพุต</th><th>IC (mA) คาดหมาย</th><th>VCE (V) คาดหมาย</th></tr></thead>
@@ -103,6 +205,11 @@
           <tr><td>A5</td><td>Fixed: RB=0 Ω</td><td colspan="2">อินพุตผิด (RB ต้อง &gt; 0) — ต้องแสดงข้อผิดพลาด ไม่ล่ม ไม่แสดงผลรอบก่อน</td></tr>
         </tbody>
       </table>
+    </section>
+
+    <section class="panel illustration">
+      <h2>ภาพประกอบการคำนวณทั้ง 3 โหมด (ค่าอ้างอิงอิสระ)</h2>
+      <img src="{{ url_for('static', filename='bjt_three_modes_calculation.svg') }}" alt="ภาพประกอบการคำนวณ BJT DC Bias ทั้ง 3 โหมด" class="calc-illustration">
     </section>
   </main>
 
